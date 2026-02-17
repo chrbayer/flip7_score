@@ -19,14 +19,8 @@ class _GameScreenState extends State<GameScreen> {
 
   void _submitScore() {
     final scoreText = _scoreController.text.trim();
-    if (scoreText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte Punkte eingeben')),
-      );
-      return;
-    }
-
-    final score = int.tryParse(scoreText);
+    // Leere Eingabe als 0 interpretieren
+    final score = scoreText.isEmpty ? 0 : int.tryParse(scoreText);
     if (score == null || score < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Bitte eine gültige Zahl eingeben')),
