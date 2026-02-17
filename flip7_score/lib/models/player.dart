@@ -16,7 +16,7 @@ class Player {
   }
 
   void undoLastScore() {
-    if (lastRoundScore > 0) {
+    if (lastRoundScore >= 0) {
       score -= lastRoundScore;
       lastRoundScore = 0;
       hasEnteredScore = false;
