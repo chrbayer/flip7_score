@@ -31,6 +31,15 @@ class _StartScreenState extends State<StartScreen> {
     final savedUsedNames = prefs.getStringList('usedPlayerNames');
     final savedModifiedNames = prefs.getStringList('modifiedNames');
 
+    // Historie ZUERST laden, bevor Controller erstellt werden
+    if (savedUsedNames != null) {
+      _usedPlayerNames.addAll(savedUsedNames);
+    }
+
+    if (savedModifiedNames != null) {
+      _modifiedNames.addAll(savedModifiedNames);
+    }
+
     setState(() {
       _playerCount = savedCount;
       _initControllers(savedCount);
@@ -39,14 +48,6 @@ class _StartScreenState extends State<StartScreen> {
         for (int i = 0; i < savedNames.length && i < _nameControllers.length; i++) {
           _nameControllers[i].text = savedNames[i];
         }
-      }
-
-      if (savedUsedNames != null) {
-        _usedPlayerNames.addAll(savedUsedNames);
-      }
-
-      if (savedModifiedNames != null) {
-        _modifiedNames.addAll(savedModifiedNames);
       }
     });
   }
