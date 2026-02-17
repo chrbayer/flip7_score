@@ -27,9 +27,13 @@
 ### 2.3 Gewinnbedingung
 - Sobald ein Spieler ≥ 200 Punkte erreicht, gewinnt dieser
 - Gewinner-Anzeige mit Namen und Punktestand
-- Option für neue Partie mit gleichen Spielern
+- Option für neue Partie mit gleichen oder neuen Spielern
 
-### 2.4 Neue Partie
+### 2.4 Spiel abbrechen
+- Button zum Abbrechen des laufenden Spiels
+- Dialog mit Optionen: Mit gleichen Spielern / Neue Spieler / Weiterspielen
+
+### 2.5 Neue Partie
 - Nach Spielende: Dialog "Mit gleichen Mitspielern weiterspielen?"
 - Ja: Alle Scores und Runde-Status zurücksetzen, Runde auf 1
 - Nein: Zurück zum Startbildschirm für neue Spielerauswahl

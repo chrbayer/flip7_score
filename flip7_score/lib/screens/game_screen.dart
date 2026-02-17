@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/player.dart';
 import 'winner_screen.dart';
+import 'start_screen.dart';
 
 class GameScreen extends StatefulWidget {
   final List<Player> players;
@@ -97,6 +98,58 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+  void _showCancelDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Spiel abbrechen?'),
+        content: const Text('Was möchten Sie tun?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _restartWithSamePlayers();
+            },
+            child: const Text('Mit gleichen Spielern'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _startNewGame();
+            },
+            child: const Text('Neue Spieler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Weiterspielen'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _restartWithSamePlayers() {
+    for (var player in widget.players) {
+      player.score = 0;
+      player.hasEnteredScore = false;
+    }
+    setState(() {
+      _currentRound = 1;
+      _selectedPlayerIndex = 0;
+      _scoreController.clear();
+    });
+  }
+
+  void _startNewGame() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const StartScreen(),
+      ),
+      (route) => false,
+    );
+  }
+
   @override
   void dispose() {
     _scoreController.dispose();
@@ -110,6 +163,13 @@ class _GameScreenState extends State<GameScreen> {
         title: const Text('Flip 7 - Spielstand'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: _showCancelDialog,
+            tooltip: 'Spiel abbrechen',
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
