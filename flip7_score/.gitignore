@@ -45,3 +45,6 @@ app.*.map.json
 
 # Local configuration
 android/local.properties
+
+# Claude Code
+.claude/
