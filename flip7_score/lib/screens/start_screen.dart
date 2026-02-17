@@ -14,13 +14,11 @@ class _StartScreenState extends State<StartScreen> {
   int _playerCount = 2;
   final List<TextEditingController> _nameControllers = [];
   final List<Player> _players = [];
-  final List<String> _usedPlayerNames = []; // Historie aller verwendeten Namen
-  final List<String> _modifiedNames = []; // Namen die vom User angepasst wurden
 
   @override
   void initState() {
     super.initState();
-    _initControllers(2);
+    _initControllersWithSavedNames(2, null);
     _loadSavedData();
   }
 
@@ -28,28 +26,26 @@ class _StartScreenState extends State<StartScreen> {
     final prefs = await SharedPreferences.getInstance();
     final savedCount = prefs.getInt('playerCount') ?? 2;
     final savedNames = prefs.getStringList('playerNames');
-    final savedUsedNames = prefs.getStringList('usedPlayerNames');
-    final savedModifiedNames = prefs.getStringList('modifiedNames');
-
-    // Historie ZUERST laden, bevor Controller erstellt werden
-    if (savedUsedNames != null) {
-      _usedPlayerNames.addAll(savedUsedNames);
-    }
-
-    if (savedModifiedNames != null) {
-      _modifiedNames.addAll(savedModifiedNames);
-    }
 
     setState(() {
       _playerCount = savedCount;
-      _initControllers(savedCount);
-
-      if (savedNames != null) {
-        for (int i = 0; i < savedNames.length && i < _nameControllers.length; i++) {
-          _nameControllers[i].text = savedNames[i];
-        }
-      }
+      _initControllersWithSavedNames(savedCount, savedNames);
     });
+  }
+
+  void _initControllersWithSavedNames(int count, List<String>? savedNames) {
+    _nameControllers.clear();
+
+    for (int i = 0; i < count; i++) {
+      final controller = TextEditingController();
+
+      // Lade gespeicherten Namen falls vorhanden
+      if (savedNames != null && i < savedNames.length && savedNames[i].isNotEmpty) {
+        controller.text = savedNames[i];
+      }
+
+      _nameControllers.add(controller);
+    }
   }
 
   Future<void> _saveData() async {
@@ -60,87 +56,19 @@ class _StartScreenState extends State<StartScreen> {
         .map((c) => c.text.trim().isEmpty ? 'Spieler ${_nameControllers.indexOf(c) + 1}' : c.text.trim())
         .toList();
     await prefs.setStringList('playerNames', names);
-    await prefs.setStringList('usedPlayerNames', _usedPlayerNames);
-  }
-
-  String _getNextPlayerName(int index, int previousCount) {
-    // Prüfe, ob der Default-Name "Spieler N" bereits in der Historie ist
-    final defaultName = 'Spieler ${index + 1}';
-
-    // Suche in der Historie nach einem bereits verwendeten Namen
-    if (_usedPlayerNames.contains(defaultName)) {
-      // Default-Name wurde schon mal verwendet, suche einen neuen
-      int counter = 2;
-      String newName = '$defaultName ($counter)';
-      while (_usedPlayerNames.contains(newName)) {
-        counter++;
-        newName = '$defaultName ($counter)';
-      }
-      return newName;
-    }
-
-    // Default-Name wurde noch nie verwendet
-    return defaultName;
-  }
-
-  void _initControllers(int count, [List<String>? previousNames]) {
-    final previousCount = _nameControllers.length;
-    final namesToUse = previousNames ?? _nameControllers.map((c) => c.text).toList();
-    _nameControllers.clear();
-
-    for (int i = 0; i < count; i++) {
-      final controller = TextEditingController();
-
-      if (i < previousCount && i < namesToUse.length && namesToUse[i].trim().isNotEmpty) {
-        // Behalte den existierenden Namen wenn möglich
-        controller.text = namesToUse[i];
-      } else {
-        // Neuer Spieler: hol den nächsten verfügbaren Namen
-        controller.text = _getNextPlayerName(i, previousCount);
-      }
-
-      _nameControllers.add(controller);
-    }
   }
 
   void _updatePlayerCount(int count) {
-    // Sichere aktuelle Namen bevor neue Controller erstellt werden
-    final currentNames = _nameControllers.map((c) => c.text.trim()).toList();
-
-    // Aktualisiere die Historie der verwendeten Namen bevor die Controller verworfen werden
-    for (int i = 0; i < _playerCount; i++) {
-      if (i < currentNames.length && currentNames[i].isNotEmpty) {
-        if (!_usedPlayerNames.contains(currentNames[i])) {
-          _usedPlayerNames.add(currentNames[i]);
-        }
-      }
-    }
-
-    // Speichere die Historie sofort in die SharedPreferences
-    _saveUsedNamesToPrefs();
-
     setState(() {
       _playerCount = count;
-      _initControllers(count, currentNames);
+      _nameControllers.clear();
+      for (int i = 0; i < count; i++) {
+        _nameControllers.add(TextEditingController());
+      }
     });
   }
 
-  Future<void> _saveUsedNamesToPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('usedPlayerNames', _usedPlayerNames);
-  }
-
   void _startGame() {
-    // Aktualisiere die Historie der verwendeten Namen
-    for (int i = 0; i < _playerCount; i++) {
-      final name = _nameControllers[i].text.trim().isEmpty
-          ? 'Spieler ${i + 1}'
-          : _nameControllers[i].text.trim();
-      if (!_usedPlayerNames.contains(name)) {
-        _usedPlayerNames.add(name);
-      }
-    }
-
     _saveData();
 
     _players.clear();
