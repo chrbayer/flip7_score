@@ -13,13 +13,27 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   int _currentRound = 1;
-  int _currentPlayerIndex = 0;
+  int? _selectedPlayerIndex;
   final TextEditingController _scoreController = TextEditingController();
-  bool _isInputPhase = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ersten Spieler auswählen
+    _selectedPlayerIndex = 0;
+  }
+
+  void _selectPlayer(int index) {
+    setState(() {
+      _selectedPlayerIndex = index;
+      _scoreController.clear();
+    });
+  }
 
   void _submitScore() {
+    if (_selectedPlayerIndex == null) return;
+
     final scoreText = _scoreController.text.trim();
-    // Leere Eingabe als 0 interpretieren
     final score = scoreText.isEmpty ? 0 : int.tryParse(scoreText);
     if (score == null || score < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -29,25 +43,46 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     setState(() {
-      widget.players[_currentPlayerIndex].score += score;
+      widget.players[_selectedPlayerIndex!].score += score;
+      widget.players[_selectedPlayerIndex!].hasEnteredScore = true;
 
       // Check for winner
-      if (widget.players[_currentPlayerIndex].score >= 200) {
+      if (widget.players[_selectedPlayerIndex!].score >= 200) {
         _showWinnerDialog();
         return;
       }
 
-      _currentPlayerIndex++;
-      if (_currentPlayerIndex >= widget.players.length) {
-        _currentPlayerIndex = 0;
-        _currentRound++;
-      }
-      _scoreController.clear();
+      // Prüfen ob alle Spieler einen Score haben
+      _checkRoundComplete();
     });
   }
 
+  void _checkRoundComplete() {
+    final allEntered = widget.players.every((p) => p.hasEnteredScore);
+    if (allEntered) {
+      // Runde abschließen und zur nächsten wechseln
+      setState(() {
+        for (var player in widget.players) {
+          player.resetRoundScore();
+        }
+        _currentRound++;
+        // Ersten Spieler auswählen der noch keinen Score hat (alle sind falsch)
+        _selectedPlayerIndex = 0;
+        _scoreController.clear();
+      });
+    } else {
+      // Nächsten Spieler ohne Score auswählen
+      int nextIndex = (_selectedPlayerIndex! + 1) % widget.players.length;
+      while (widget.players[nextIndex].hasEnteredScore) {
+        nextIndex = (nextIndex + 1) % widget.players.length;
+      }
+      _selectedPlayerIndex = nextIndex;
+      _scoreController.clear();
+    }
+  }
+
   void _showWinnerDialog() {
-    final winner = widget.players[_currentPlayerIndex];
+    final winner = widget.players[_selectedPlayerIndex!];
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -67,8 +102,6 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentPlayer = widget.players[_currentPlayerIndex];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flip 7 - Spielstand'),
@@ -91,14 +124,15 @@ class _GameScreenState extends State<GameScreen> {
                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'Aktuell: ${currentPlayer.name}',
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                    if (_selectedPlayerIndex != null)
+                      Text(
+                        'Eingabe für: ${widget.players[_selectedPlayerIndex!].name}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -128,7 +162,7 @@ class _GameScreenState extends State<GameScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Aktueller Spielstand',
+              'Spielstände',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -140,32 +174,49 @@ class _GameScreenState extends State<GameScreen> {
                   separatorBuilder: (context, index) => const Divider(),
                   itemBuilder: (context, index) {
                     final player = widget.players[index];
-                    final isCurrentPlayer = index == _currentPlayerIndex;
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: isCurrentPlayer
-                            ? Theme.of(context).colorScheme.secondary
-                            : Theme.of(context).colorScheme.primary,
-                        child: Text(
-                          '${index + 1}',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      title: Text(
-                        player.name,
-                        style: TextStyle(
-                          fontWeight: isCurrentPlayer ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 18,
-                        ),
-                      ),
-                      trailing: Text(
-                        '${player.score} Punkte',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: player.score >= 200
-                              ? Colors.green
-                              : Theme.of(context).colorScheme.primary,
+                    final isSelected = index == _selectedPlayerIndex;
+                    final hasEntered = player.hasEnteredScore;
+
+                    return InkWell(
+                      onTap: () => _selectPlayer(index),
+                      child: Container(
+                        color: hasEntered
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : isSelected
+                                ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                                : null,
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: hasEntered
+                                ? Colors.green
+                                : isSelected
+                                    ? Theme.of(context).colorScheme.secondary
+                                    : Theme.of(context).colorScheme.primary,
+                            child: hasEntered
+                                ? const Icon(Icons.check, color: Colors.white, size: 20)
+                                : Text(
+                                    '${index + 1}',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                          ),
+                          title: Text(
+                            player.name,
+                            style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontSize: 18,
+                              color: hasEntered ? Colors.green[700] : null,
+                            ),
+                          ),
+                          trailing: Text(
+                            '${player.score} Punkte',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: player.score >= 200
+                                  ? Colors.green
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
                         ),
                       ),
                     );

@@ -12,12 +12,17 @@
 - Benutzer kann Anzahl der Mitspieler festlegen (2-6 Spieler)
 - Für jeden Spieler wird ein Name vergeben (Standard: "Spieler 1", "Spieler 2", etc.)
 - Spielstand wird auf 0 Punkte initialisiert
+- Anzahl und Namen werden gespeichert und beim nächsten Start als Default geladen
 
 ### 2.2 Runde erfassen
 - Pro Runde werden die Punkte jedes Spielers eingegeben
 - Punkte werden zum Gesamtscore addiert
 - Anzeige der aktuellen Runde (Runde 1, 2, ...)
 - Alle Spieler müssen in einer Runde ihre Punkte eingeben
+- Freie Eingabereihenfolge: Spieler können in beliebiger Reihenfolge klicken
+- Leere Eingabe wird als 0 interpretiert
+- Farbliche Markierung (grün) zeigt Spieler mit bereits eingetragenem Score
+- Automatischer Runde-Wechsel sobald alle Spieler einen Score haben
 
 ### 2.3 Gewinnbedingung
 - Sobald ein Spieler ≥ 200 Punkte erreicht, gewinnt dieser
@@ -50,6 +55,7 @@
 ## 4. Technische Umsetzung
 
 - **State Management**: StatefulWidget mit setState (einfache App)
-- **Datenmodell**: Player-Klasse mit name und score
+- **Datenmodell**: Player-Klasse mit name, score und hasEnteredScore
 - **Navigation**: Navigator mit named routes
 - **Widgets**: Material Design Components
+- **Persistenz**: shared_preferences für Spielernamen und Anzahl

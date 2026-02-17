@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/player.dart';
 import 'game_screen.dart';
 
@@ -18,6 +19,34 @@ class _StartScreenState extends State<StartScreen> {
   void initState() {
     super.initState();
     _initControllers(2);
+    _loadSavedData();
+  }
+
+  Future<void> _loadSavedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedCount = prefs.getInt('playerCount') ?? 2;
+    final savedNames = prefs.getStringList('playerNames');
+
+    setState(() {
+      _playerCount = savedCount;
+      _initControllers(savedCount);
+
+      if (savedNames != null) {
+        for (int i = 0; i < savedNames.length && i < _nameControllers.length; i++) {
+          _nameControllers[i].text = savedNames[i];
+        }
+      }
+    });
+  }
+
+  Future<void> _saveData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('playerCount', _playerCount);
+
+    final names = _nameControllers
+        .map((c) => c.text.trim().isEmpty ? 'Spieler ${_nameControllers.indexOf(c) + 1}' : c.text.trim())
+        .toList();
+    await prefs.setStringList('playerNames', names);
   }
 
   void _initControllers(int count) {
@@ -35,6 +64,8 @@ class _StartScreenState extends State<StartScreen> {
   }
 
   void _startGame() {
+    _saveData();
+
     _players.clear();
     for (int i = 0; i < _playerCount; i++) {
       _players.add(Player(name: _nameControllers[i].text.trim().isEmpty

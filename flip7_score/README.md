@@ -5,8 +5,11 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 ## Funktionen
 
 - **Spielersetup**: 2-6 Mitspieler mit individuellen Namen
-- **Punkteerfassung**: Punkte pro Runde eingeben und aufaddieren
+- **Persistenz**: Spielernamen und Anzahl werden gespeichert
+- **Punkteerfassung**: Freie Reihenfolge, leere Eingabe = 0
 - **Rundenzähler**: Aktuelle Runde wird angezeigt
+- **Farbliche Markierung**: Grüner Hintergrund/Check für eingegebene Scores
+- **Automatischer Runde-Wechsel**: Wenn alle Spieler einen Score haben
 - **Gewinnermittlung**: Gewinner wird bei 200+ Punkten angezeigt
 - **Neue Partie**: Option für Rematch mit gleichen Spielern
 
@@ -20,13 +23,15 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 
 - **Framework**: Flutter
 - **State Management**: StatefulWidget mit setState
-- **Datenmodell**: Player-Klasse (name, score)
+- **Datenmodell**: Player-Klasse (name, score, hasEnteredScore)
+- **Persistenz**: shared_preferences
 - **Design**: Material Design 3
 
 ## Farbschema
 
 - Primär: Blau (#2196F3)
 - Sekundär: Orange (#FF9800)
+- Eingetragen: Grün
 - Gewinner: Gold (#FFD700)
 
 ## Installation
@@ -40,5 +45,5 @@ flutter run
 ## Build
 
 ```bash
-flutter build apk --debug
+flutter build apk --release
 ```
