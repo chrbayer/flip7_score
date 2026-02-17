@@ -13,6 +13,8 @@
 - Für jeden Spieler wird ein Name vergeben (Standard: "Spieler 1", "Spieler 2", etc.)
 - Spielstand wird auf 0 Punkte initialisiert
 - Anzahl und Namen werden gespeichert und beim nächsten Start als Default geladen
+- **Namensverlauf**: Zuletzt benutzte, gerade nicht aktive Namen werden beim Hinzufügen eines Spielers automatisch vorgeschlagen (neueste zuerst, keine Duplikate)
+- **Deduplizierung**: Doppelt eingegebene Namen werden automatisch durch Anhängen von " (1)", " (2)" usw. eindeutig gemacht; vor Spielstart erscheint ein Dialog, der alle Spieler über ihre endgültigen Namen informiert
 
 ### 2.2 Runde erfassen
 - Pro Runde werden die Punkte jedes Spielers eingegeben
@@ -23,6 +25,7 @@
 - Leere Eingabe wird als 0 interpretiert
 - Farbliche Markierung (grün) zeigt Spieler mit bereits eingetragenem Score
 - Automatischer Runde-Wechsel sobald alle Spieler einen Score haben
+- **Undo**: Langer Druck auf einen bereits eingetragenen Spieler macht dessen letzten Score rückgängig
 
 ### 2.3 Gewinnbedingung
 - Sobald ein Spieler ≥ 200 Punkte erreicht, gewinnt dieser
@@ -34,16 +37,16 @@
 - Dialog mit Optionen: Mit gleichen Spielern / Neue Spieler / Weiterspielen
 
 ### 2.5 Neue Partie
-- Nach Spielende: Dialog "Mit gleichen Mitspielern weiterspielen?"
-- Ja: Alle Scores und Runde-Status zurücksetzen, Runde auf 1
-- Nein: Zurück zum Startbildschirm für neue Spielerauswahl
+- Nach Spielende: Gewinnerbildschirm mit Endstand (sortiert nach Punkten)
+- "Mit gleichen Spielern weiterspielen": Alle Scores und Runde-Status zurücksetzen, Runde auf 1
+- "Neue Spieler auswählen": Zurück zum Startbildschirm für neue Spielerauswahl
 
 ## 3. UI/UX Design
 
 ### 3.1 Bildschirme
 1. **Startbildschirm**: Spielerauswahl (Anzahl + Namen)
 2. **Spielbildschirm**: Aktueller Spielstand, Runde, Punkteeingabe
-3. **Gewinnerbildschirm**: Gewinner-Anzeige, "Neue Partie"-Option
+3. **Gewinnerbildschirm**: Gewinner-Anzeige, Endstand-Tabelle, "Neue Partie"-Option
 
 ### 3.2 Farbschema
 - Primär: Blau (#2196F3)
@@ -59,7 +62,7 @@
 ## 4. Technische Umsetzung
 
 - **State Management**: StatefulWidget mit setState (einfache App)
-- **Datenmodell**: Player-Klasse mit name, score und hasEnteredScore
-- **Navigation**: Navigator mit named routes
+- **Datenmodell**: Player-Klasse mit `name`, `score`, `hasEnteredScore`, `lastRoundScore` (für Undo)
+- **Navigation**: Navigator mit anonymen Routes (MaterialPageRoute)
 - **Widgets**: Material Design Components
-- **Persistenz**: shared_preferences für Spielernamen und Anzahl
+- **Persistenz**: shared_preferences für Spieleranzahl, aktive Spielernamen und Namensverlauf (`recentNames`)
