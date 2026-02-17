@@ -115,10 +115,18 @@ class _StartScreenState extends State<StartScreen> {
       }
     }
 
+    // Speichere die Historie sofort in die SharedPreferences
+    _saveUsedNamesToPrefs();
+
     setState(() {
       _playerCount = count;
       _initControllers(count, currentNames);
     });
+  }
+
+  Future<void> _saveUsedNamesToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('usedPlayerNames', _usedPlayerNames);
   }
 
   void _startGame() {
@@ -215,6 +223,7 @@ class _StartScreenState extends State<StartScreen> {
                     padding: const EdgeInsets.only(bottom: 8.0),
                     child: TextField(
                       controller: _nameControllers[index],
+                      textCapitalization: TextCapitalization.words,
                       decoration: InputDecoration(
                         labelText: 'Spieler ${index + 1}',
                         border: const OutlineInputBorder(),
