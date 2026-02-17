@@ -14,6 +14,8 @@ class _StartScreenState extends State<StartScreen> {
   int _playerCount = 2;
   final List<TextEditingController> _nameControllers = [];
   final List<Player> _players = [];
+  final List<String> _usedPlayerNames = []; // Historie aller verwendeten Namen
+  final List<String> _modifiedNames = []; // Namen die vom User angepasst wurden
 
   @override
   void initState() {
@@ -26,6 +28,8 @@ class _StartScreenState extends State<StartScreen> {
     final prefs = await SharedPreferences.getInstance();
     final savedCount = prefs.getInt('playerCount') ?? 2;
     final savedNames = prefs.getStringList('playerNames');
+    final savedUsedNames = prefs.getStringList('usedPlayerNames');
+    final savedModifiedNames = prefs.getStringList('modifiedNames');
 
     setState(() {
       _playerCount = savedCount;
@@ -35,6 +39,14 @@ class _StartScreenState extends State<StartScreen> {
         for (int i = 0; i < savedNames.length && i < _nameControllers.length; i++) {
           _nameControllers[i].text = savedNames[i];
         }
+      }
+
+      if (savedUsedNames != null) {
+        _usedPlayerNames.addAll(savedUsedNames);
+      }
+
+      if (savedModifiedNames != null) {
+        _modifiedNames.addAll(savedModifiedNames);
       }
     });
   }
@@ -47,12 +59,46 @@ class _StartScreenState extends State<StartScreen> {
         .map((c) => c.text.trim().isEmpty ? 'Spieler ${_nameControllers.indexOf(c) + 1}' : c.text.trim())
         .toList();
     await prefs.setStringList('playerNames', names);
+    await prefs.setStringList('usedPlayerNames', _usedPlayerNames);
+  }
+
+  String _getNextPlayerName(int index, int previousCount) {
+    // Prüfe, ob der Default-Name "Spieler N" bereits in der Historie ist
+    final defaultName = 'Spieler ${index + 1}';
+
+    // Suche in der Historie nach einem bereits verwendeten Namen
+    if (_usedPlayerNames.contains(defaultName)) {
+      // Default-Name wurde schon mal verwendet, suche einen neuen
+      int counter = 2;
+      String newName = '$defaultName ($counter)';
+      while (_usedPlayerNames.contains(newName)) {
+        counter++;
+        newName = '$defaultName ($counter)';
+      }
+      return newName;
+    }
+
+    // Default-Name wurde noch nie verwendet
+    return defaultName;
   }
 
   void _initControllers(int count) {
+    final previousCount = _nameControllers.length;
+    final previousNames = _nameControllers.map((c) => c.text).toList();
     _nameControllers.clear();
+
     for (int i = 0; i < count; i++) {
-      _nameControllers.add(TextEditingController(text: 'Spieler ${i + 1}'));
+      final controller = TextEditingController();
+
+      if (i < previousCount && previousNames[i].trim().isNotEmpty) {
+        // Behalte den existierenden Namen wenn möglich
+        controller.text = previousNames[i];
+      } else {
+        // Neuer Spieler: hol den nächsten verfügbaren Namen
+        controller.text = _getNextPlayerName(i, previousCount);
+      }
+
+      _nameControllers.add(controller);
     }
   }
 
@@ -64,6 +110,16 @@ class _StartScreenState extends State<StartScreen> {
   }
 
   void _startGame() {
+    // Aktualisiere die Historie der verwendeten Namen
+    for (int i = 0; i < _playerCount; i++) {
+      final name = _nameControllers[i].text.trim().isEmpty
+          ? 'Spieler ${i + 1}'
+          : _nameControllers[i].text.trim();
+      if (!_usedPlayerNames.contains(name)) {
+        _usedPlayerNames.add(name);
+      }
+    }
+
     _saveData();
 
     _players.clear();

@@ -47,6 +47,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     setState(() {
+      widget.players[_selectedPlayerIndex!].lastRoundScore = score;
       widget.players[_selectedPlayerIndex!].score += score;
       widget.players[_selectedPlayerIndex!].hasEnteredScore = true;
 
@@ -83,6 +84,21 @@ class _GameScreenState extends State<GameScreen> {
       _selectedPlayerIndex = nextIndex;
       _scoreController.clear();
     }
+  }
+
+  void _undoLastScore(int index) {
+    final player = widget.players[index];
+    if (!player.hasEnteredScore) return;
+
+    setState(() {
+      player.undoLastScore();
+      // Wenn der Spieler der aktuell ausgewählte war, bleib ausgewählt
+      // sonst wähle den ersten Spieler ohne Score
+      if (_selectedPlayerIndex != index) {
+        _selectedPlayerIndex = index;
+      }
+      _scoreController.clear();
+    });
   }
 
   void _showWinnerDialog() {
@@ -242,6 +258,7 @@ class _GameScreenState extends State<GameScreen> {
 
                     return InkWell(
                       onTap: () => _selectPlayer(index),
+                      onLongPress: hasEntered ? () => _undoLastScore(index) : null,
                       child: Container(
                         color: hasEntered
                             ? Colors.green.withValues(alpha: 0.1)
