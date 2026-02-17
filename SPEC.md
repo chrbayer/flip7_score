@@ -18,8 +18,8 @@
 - Pro Runde werden die Punkte jedes Spielers eingegeben
 - Punkte werden zum Gesamtscore addiert
 - Anzeige der aktuellen Runde (Runde 1, 2, ...)
-- Alle Spieler müssen in einer Runde ihre Punkte eingeben
-- Freie Eingabereihenfolge: Spieler können in beliebiger Reihenfolge klicken
+- Jeder Spieler kann nur einmal pro Runde Punkte eintragen
+- Spieler können in beliebiger Reihenfolge ausgewählt werden
 - Leere Eingabe wird als 0 interpretiert
 - Farbliche Markierung (grün) zeigt Spieler mit bereits eingetragenem Score
 - Automatischer Runde-Wechsel sobald alle Spieler einen Score haben
@@ -31,7 +31,7 @@
 
 ### 2.4 Neue Partie
 - Nach Spielende: Dialog "Mit gleichen Mitspielern weiterspielen?"
-- Ja: Alle Scores auf 0 zurücksetzen, Runde auf 1
+- Ja: Alle Scores und Runde-Status zurücksetzen, Runde auf 1
 - Nein: Zurück zum Startbildschirm für neue Spielerauswahl
 
 ## 3. UI/UX Design

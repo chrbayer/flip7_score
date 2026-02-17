@@ -24,6 +24,9 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _selectPlayer(int index) {
+    // Nur Spieler auswählen die noch keinen Score eingetragen haben
+    if (widget.players[index].hasEnteredScore) return;
+
     setState(() {
       _selectedPlayerIndex = index;
       _scoreController.clear();

@@ -14,9 +14,10 @@ class WinnerScreen extends StatelessWidget {
   });
 
   void _restartWithSamePlayers(BuildContext context) {
-    // Reset scores
+    // Reset scores and round status
     for (var player in allPlayers) {
       player.score = 0;
+      player.hasEnteredScore = false;
     }
 
     Navigator.pushReplacement(
