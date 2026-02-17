@@ -59,11 +59,19 @@ class _StartScreenState extends State<StartScreen> {
   }
 
   void _updatePlayerCount(int count) {
+    // Aktuelle Namen sichern bevor Controller verworfen werden
+    final currentNames = _nameControllers.map((c) => c.text).toList();
+
     setState(() {
       _playerCount = count;
       _nameControllers.clear();
       for (int i = 0; i < count; i++) {
-        _nameControllers.add(TextEditingController());
+        final controller = TextEditingController();
+        // Behalte existierende Namen falls vorhanden
+        if (i < currentNames.length) {
+          controller.text = currentNames[i];
+        }
+        _nameControllers.add(controller);
       }
     });
   }
