@@ -82,17 +82,17 @@ class _StartScreenState extends State<StartScreen> {
     return defaultName;
   }
 
-  void _initControllers(int count) {
+  void _initControllers(int count, [List<String>? previousNames]) {
     final previousCount = _nameControllers.length;
-    final previousNames = _nameControllers.map((c) => c.text).toList();
+    final namesToUse = previousNames ?? _nameControllers.map((c) => c.text).toList();
     _nameControllers.clear();
 
     for (int i = 0; i < count; i++) {
       final controller = TextEditingController();
 
-      if (i < previousCount && previousNames[i].trim().isNotEmpty) {
+      if (i < previousCount && i < namesToUse.length && namesToUse[i].trim().isNotEmpty) {
         // Behalte den existierenden Namen wenn möglich
-        controller.text = previousNames[i];
+        controller.text = namesToUse[i];
       } else {
         // Neuer Spieler: hol den nächsten verfügbaren Namen
         controller.text = _getNextPlayerName(i, previousCount);
@@ -103,9 +103,21 @@ class _StartScreenState extends State<StartScreen> {
   }
 
   void _updatePlayerCount(int count) {
+    // Sichere aktuelle Namen bevor neue Controller erstellt werden
+    final currentNames = _nameControllers.map((c) => c.text.trim()).toList();
+
+    // Aktualisiere die Historie der verwendeten Namen bevor die Controller verworfen werden
+    for (int i = 0; i < _playerCount; i++) {
+      if (i < currentNames.length && currentNames[i].isNotEmpty) {
+        if (!_usedPlayerNames.contains(currentNames[i])) {
+          _usedPlayerNames.add(currentNames[i]);
+        }
+      }
+    }
+
     setState(() {
       _playerCount = count;
-      _initControllers(count);
+      _initControllers(count, currentNames);
     });
   }
 
