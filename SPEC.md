@@ -99,6 +99,7 @@
 - Große, gut lesbare Schrift
 - Kein Zurück-Button auf beiden Bildschirmen (Startbildschirm ist erster Screen, Spielbildschirm wird abgebrochen über Schaltfläche)
 - **Responsive Layout**: Optimiert für Tablets (≥600dp) mit 2-Spalten-Grid für Spielerlisten und nebeneinander angeordneten Eingabeelementen
+- **Drag-and-drop**: Spielerreihenfolge kann im Startbildschirm per Drag-and-drop geändert werden
 
 ## 4. Technische Umsetzung
 

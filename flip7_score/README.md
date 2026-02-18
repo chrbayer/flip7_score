@@ -5,6 +5,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 ## Funktionen
 
 - **Spielersetup**: 2-6 Mitspieler mit individuellen Namen
+- **Drag-and-drop**: Spielerreihenfolge kann im Startbildschirm per Drag-and-drop geändert werden
 - **Persistenz**: Spieleranzahl, -namen und Namensverlauf werden gespeichert
 - **Namensverlauf**: Beim Hinzufügen eines Spielers wird automatisch ein zuletzt verwendeter Name vorgeschlagen (kein Duplikat zu aktiven Spielern)
 - **Deduplizierung**: Doppelte Namen erhalten automatisch ein " (1)", " (2)" usw.; ein Dialog informiert alle Spieler vor Spielstart über ihre endgültigen Namen
@@ -37,7 +38,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Persistenz**: shared_preferences
 - **Design**: Material Design 3
 - **Responsive Layout**: Optimiert für Tablets (≥600dp) mit 2-Spalten-Layout
-- **Tests**: 65 Unit- und Widget-Tests
+- **Tests**: 67 Unit- und Widget-Tests
 
 ## Farbschema
 

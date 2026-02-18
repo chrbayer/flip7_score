@@ -23,6 +23,8 @@ class _StartScreenState extends State<StartScreen> {
   final List<String> _committedNames = [];
   final List<Player> _players = [];
   List<String> _recentNames = [];
+  // Reihenfolge der Spieler für Drag-and-drop
+  List<int> _playerOrder = [];
 
   bool get _isTablet => MediaQuery.of(context).size.width >= 600;
 
@@ -38,6 +40,7 @@ class _StartScreenState extends State<StartScreen> {
     _nameControllers.add(TextEditingController(text: text));
     _nameFocusNodes.add(FocusNode());
     _committedNames.add(text);
+    _playerOrder.add(_nameControllers.length - 1);
   }
 
   /// Vergleicht aktuelle Controller-Texte mit _committedNames für die ersten
@@ -129,6 +132,8 @@ class _StartScreenState extends State<StartScreen> {
 
       if (count < currentCount) {
         // Entfernte Slots: aktuellen Namen in History aufnehmen
+        // und aus _playerOrder entfernen
+        final removedIndices = <int>[];
         for (int i = currentCount - 1; i >= count; i--) {
           final name = _nameControllers[i].text.trim();
           if (name.isNotEmpty) {
@@ -140,7 +145,13 @@ class _StartScreenState extends State<StartScreen> {
           _nameControllers.removeAt(i);
           _nameFocusNodes.removeAt(i);
           _committedNames.removeAt(i);
+          removedIndices.add(i);
         }
+        // Entfernte Indizes aus _playerOrder entfernen
+        _playerOrder = _playerOrder
+            .where((idx) => !removedIndices.contains(idx))
+            .map((idx) => idx > count - 1 ? idx - 1 : idx)
+            .toList();
       } else {
         // Neue Slots: ersten nicht-duplizierten Namen aus History vorbelegen
         final activeNames = _nameControllers.map((c) => c.text.trim()).toSet();
@@ -178,18 +189,21 @@ class _StartScreenState extends State<StartScreen> {
     _reconcileChangedNames(_nameControllers.length);
     _saveData();
 
-    final rawNames = List.generate(_playerCount, (i) {
-      final t = _nameControllers[i].text.trim();
-      return t.isEmpty ? 'Spieler ${i + 1}' : t;
-    });
-    final names = _deduplicateNames(rawNames);
+    // Namen basierend auf der _playerOrder Reihenfolge lesen
+    final orderedNames = <String>[];
+    for (int i = 0; i < _playerCount; i++) {
+      final controllerIndex = _playerOrder[i];
+      final t = _nameControllers[controllerIndex].text.trim();
+      orderedNames.add(t.isEmpty ? 'Spieler ${controllerIndex + 1}' : t);
+    }
+    final names = _deduplicateNames(orderedNames);
 
     _players.clear();
     for (int i = 0; i < _playerCount; i++) {
       _players.add(Player(name: names[i]));
     }
 
-    final hasDuplicates = List.generate(_playerCount, (i) => rawNames[i] != names[i]).any((c) => c);
+    final hasDuplicates = List.generate(_playerCount, (i) => orderedNames[i] != names[i]).any((c) => c);
     if (hasDuplicates) {
       showDialog(
         context: context,
@@ -210,12 +224,12 @@ class _StartScreenState extends State<StartScreen> {
                     Text(
                       names[i],
                       style: TextStyle(
-                        fontWeight: rawNames[i] != names[i]
+                        fontWeight: orderedNames[i] != names[i]
                             ? FontWeight.bold
                             : FontWeight.normal,
                       ),
                     ),
-                    if (rawNames[i] != names[i])
+                    if (orderedNames[i] != names[i])
                       const Text(' ← angepasst',
                           style: TextStyle(color: Colors.orange, fontSize: 12)),
                   ],
@@ -294,26 +308,35 @@ class _StartScreenState extends State<StartScreen> {
         ),
         const SizedBox(height: 8),
         Expanded(
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 3,
-            ),
+          child: ReorderableListView.builder(
             itemCount: _playerCount,
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (newIndex > oldIndex) newIndex--;
+                final item = _playerOrder.removeAt(oldIndex);
+                _playerOrder.insert(newIndex, item);
+              });
+            },
             itemBuilder: (context, index) {
+              final controllerIndex = _playerOrder[index];
               return Padding(
-                padding: const EdgeInsets.all(4.0),
+                key: ValueKey('tablet_$index'),
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: TextField(
-                  controller: _nameControllers[index],
-                  focusNode: _nameFocusNodes[index],
+                  controller: _nameControllers[controllerIndex],
+                  focusNode: _nameFocusNodes[controllerIndex],
                   textCapitalization: TextCapitalization.words,
                   decoration: InputDecoration(
                     labelText: 'Spieler ${index + 1}',
                     border: const OutlineInputBorder(),
+                    prefixIcon: ReorderableDragStartListener(
+                      index: index,
+                      child: const Icon(Icons.drag_handle),
+                    ),
                   ),
                   onSubmitted: (_) {
                     if (index < _playerCount - 1) {
-                      _nameFocusNodes[index + 1].requestFocus();
+                      _nameFocusNodes[_playerOrder[index + 1]].requestFocus();
                     }
                   },
                 ),
@@ -434,23 +457,36 @@ class _StartScreenState extends State<StartScreen> {
         ),
         const SizedBox(height: 8),
         Expanded(
-          child: ListView.builder(
+          child: ReorderableListView.builder(
             itemCount: _playerCount,
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (newIndex > oldIndex) newIndex--;
+                final item = _playerOrder.removeAt(oldIndex);
+                _playerOrder.insert(newIndex, item);
+              });
+            },
             itemBuilder: (context, index) {
+              final controllerIndex = _playerOrder[index];
               return Padding(
+                key: ValueKey('phone_$index'),
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: TextField(
-                  controller: _nameControllers[index],
-                  focusNode: _nameFocusNodes[index],
+                  controller: _nameControllers[controllerIndex],
+                  focusNode: _nameFocusNodes[controllerIndex],
                   textCapitalization: TextCapitalization.words,
                   decoration: InputDecoration(
                     labelText: 'Spieler ${index + 1}',
                     border: const OutlineInputBorder(),
+                    prefixIcon: ReorderableDragStartListener(
+                      index: index,
+                      child: const Icon(Icons.drag_handle),
+                    ),
                   ),
                   onSubmitted: (_) {
                     if (index < _playerCount - 1) {
                       // Zum nächsten Eingabefeld
-                      _nameFocusNodes[index + 1].requestFocus();
+                      _nameFocusNodes[_playerOrder[index + 1]].requestFocus();
                     }
                     // Bei letztem Spieler: kein Fokus setzen
                   },
