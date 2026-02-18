@@ -1,5 +1,8 @@
 # Claude Code
 .claude/
 
+# Obsidian
+.obsidian/
+
 # Local todos (nicht für Versionierung)
 TODO.md

@@ -13,6 +13,7 @@ class StartScreen extends StatefulWidget {
 class _StartScreenState extends State<StartScreen> {
   int _playerCount = 2;
   final List<TextEditingController> _nameControllers = [];
+  final List<FocusNode> _nameFocusNodes = [];
   // Zuletzt bestätigte Namen (parallel zu _nameControllers),
   // dient als Referenz um manuelle Änderungen zu erkennen.
   final List<String> _committedNames = [];
@@ -29,6 +30,7 @@ class _StartScreenState extends State<StartScreen> {
 
   void _addController(String text) {
     _nameControllers.add(TextEditingController(text: text));
+    _nameFocusNodes.add(FocusNode());
     _committedNames.add(text);
   }
 
@@ -69,7 +71,9 @@ class _StartScreenState extends State<StartScreen> {
       _recentNames = savedRecent;
 
       for (var c in _nameControllers) c.dispose();
+      for (var f in _nameFocusNodes) f.dispose();
       _nameControllers.clear();
+      _nameFocusNodes.clear();
       _committedNames.clear();
 
       for (int i = 0; i < savedCount; i++) {
@@ -113,7 +117,9 @@ class _StartScreenState extends State<StartScreen> {
             _recentNames.insert(0, name);
           }
           _nameControllers[i].dispose();
+          _nameFocusNodes[i].dispose();
           _nameControllers.removeAt(i);
+          _nameFocusNodes.removeAt(i);
           _committedNames.removeAt(i);
         }
       } else {
@@ -229,6 +235,9 @@ class _StartScreenState extends State<StartScreen> {
     for (var controller in _nameControllers) {
       controller.dispose();
     }
+    for (var focusNode in _nameFocusNodes) {
+      focusNode.dispose();
+    }
     super.dispose();
   }
 
@@ -297,11 +306,19 @@ class _StartScreenState extends State<StartScreen> {
                     padding: const EdgeInsets.only(bottom: 8.0),
                     child: TextField(
                       controller: _nameControllers[index],
+                      focusNode: _nameFocusNodes[index],
                       textCapitalization: TextCapitalization.words,
                       decoration: InputDecoration(
                         labelText: 'Spieler ${index + 1}',
                         border: const OutlineInputBorder(),
                       ),
+                      onSubmitted: (_) {
+                        if (index < _playerCount - 1) {
+                          // Zum nächsten Eingabefeld
+                          _nameFocusNodes[index + 1].requestFocus();
+                        }
+                        // Bei letztem Spieler: kein Fokus setzen
+                      },
                     ),
                   );
                 },
