@@ -230,7 +230,8 @@ void main() {
 
       await tester.enterText(find.byType(TextField), '5');
       await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      // pumpAndSettle würde nie enden da ConfettiWidget läuft; pump() für Navigation
+      await tester.pump();
       await tester.pump(const Duration(seconds: 2));
 
       expect(find.text('Gewinner!'), findsOneWidget);
@@ -253,18 +254,19 @@ void main() {
 
       await tester.enterText(find.byType(TextField), '5');
       await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      // pumpAndSettle würde nie enden da ConfettiWidget läuft; pump() für Navigation
+      await tester.pump();
       await tester.pump(const Duration(seconds: 2));
 
       expect(find.text('Gewinner!'), findsOneWidget);
 
       await tester.tap(find.text('Zurück zum Spiel'));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('Gewinner rückgängig?'), findsOneWidget);
 
       await tester.tap(find.text('Zurück zum Spiel').last);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('Runde 1'), findsOneWidget);
       expect(find.text('195 Punkte'), findsOneWidget);

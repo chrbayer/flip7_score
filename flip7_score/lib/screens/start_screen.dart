@@ -86,6 +86,7 @@ class _StartScreenState extends State<StartScreen> {
         _nameControllers.clear();
         _nameFocusNodes.clear();
         _committedNames.clear();
+        _playerOrder.clear();
 
         for (int i = 0; i < savedCount; i++) {
           final name = (i < savedNames.length && savedNames[i].isNotEmpty)
