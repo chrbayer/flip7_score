@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/player.dart';
+import '../models/round.dart';
 import 'winner_screen.dart';
 import 'start_screen.dart';
 
@@ -16,6 +17,9 @@ class _GameScreenState extends State<GameScreen> {
   int _currentRound = 1;
   int? _selectedPlayerIndex;
   final TextEditingController _scoreController = TextEditingController();
+  final FocusNode _scoreFocusNode = FocusNode();
+  final List<Round> _roundHistory = [];
+  bool _historyExpanded = false;
 
   @override
   void initState() {
@@ -65,6 +69,16 @@ class _GameScreenState extends State<GameScreen> {
   void _checkRoundComplete() {
     final allEntered = widget.players.every((p) => p.hasEnteredScore);
     if (allEntered) {
+      // Runde in History speichern
+      final roundScores = <String, int>{};
+      for (var player in widget.players) {
+        roundScores[player.name] = player.lastRoundScore;
+      }
+      _roundHistory.add(Round(
+        roundNumber: _currentRound,
+        playerScores: roundScores,
+      ));
+
       // Runde abschließen und zur nächsten wechseln
       setState(() {
         for (var player in widget.players) {
@@ -75,14 +89,20 @@ class _GameScreenState extends State<GameScreen> {
         _selectedPlayerIndex = 0;
         _scoreController.clear();
       });
+      // Fokus auf TextField setzen
+      FocusScope.of(context).requestFocus(_scoreFocusNode);
     } else {
       // Nächsten Spieler ohne Score auswählen
       int nextIndex = (_selectedPlayerIndex! + 1) % widget.players.length;
       while (widget.players[nextIndex].hasEnteredScore) {
         nextIndex = (nextIndex + 1) % widget.players.length;
       }
-      _selectedPlayerIndex = nextIndex;
-      _scoreController.clear();
+      setState(() {
+        _selectedPlayerIndex = nextIndex;
+        _scoreController.clear();
+      });
+      // Fokus auf TextField setzen
+      FocusScope.of(context).requestFocus(_scoreFocusNode);
     }
   }
 
@@ -153,7 +173,11 @@ class _GameScreenState extends State<GameScreen> {
       _currentRound = 1;
       _selectedPlayerIndex = 0;
       _scoreController.clear();
+      _roundHistory.clear();
+      _historyExpanded = false;
     });
+    // Fokus auf TextField setzen
+    FocusScope.of(context).requestFocus(_scoreFocusNode);
   }
 
   void _startNewGame() {
@@ -169,6 +193,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void dispose() {
     _scoreController.dispose();
+    _scoreFocusNode.dispose();
     super.dispose();
   }
 
@@ -217,9 +242,46 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
             ),
+            // Runden-Historie (ausklappbar)
+            if (_roundHistory.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Card(
+                child: ExpansionTile(
+                  leading: const Icon(Icons.history),
+                  title: Text('Runden (${_roundHistory.length})'),
+                  trailing: Icon(
+                    _historyExpanded ? Icons.expand_less : Icons.expand_more,
+                  ),
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      _historyExpanded = expanded;
+                    });
+                  },
+                  children: [
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _roundHistory.length,
+                      itemBuilder: (context, index) {
+                        final round = _roundHistory[index];
+                        final scoresText = round.playerScores.entries
+                            .map((e) => '${e.key}: +${e.value}')
+                            .join(', ');
+                        return ListTile(
+                          dense: true,
+                          title: Text('Runde ${round.roundNumber}'),
+                          subtitle: Text(scoresText),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             TextField(
               controller: _scoreController,
+              focusNode: _scoreFocusNode,
               keyboardType: TextInputType.number,
               autofocus: true,
               decoration: const InputDecoration(

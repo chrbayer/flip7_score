@@ -41,6 +41,11 @@
 - "Mit gleichen Spielern weiterspielen": Alle Scores und Runde-Status zurücksetzen, Runde auf 1
 - "Neue Spieler auswählen": Zurück zum Startbildschirm für neue Spielerauswahl
 
+### 2.6 Round History
+- Alle abgeschlossenen Runden werden gespeichert
+- Eingeklappte History-Ansicht im Spielbildschirm zeigt vergangene Runden
+- Pro Runde werden die Scores aller Spieler angezeigt
+
 ## 3. UI/UX Design
 
 ### 3.1 Bildschirme
@@ -62,7 +67,9 @@
 ## 4. Technische Umsetzung
 
 - **State Management**: StatefulWidget mit setState (einfache App)
-- **Datenmodell**: Player-Klasse mit `name`, `score`, `hasEnteredScore`, `lastRoundScore` (für Undo)
+- **Datenmodell**:
+  - Player-Klasse mit `name`, `score`, `hasEnteredScore`, `lastRoundScore` (für Undo)
+  - Round-Klasse mit `roundNumber` und `scores` (Map<SpielerName, Punkte>)
 - **Navigation**: Navigator mit anonymen Routes (MaterialPageRoute)
 - **Widgets**: Material Design Components
 - **Persistenz**: shared_preferences für Spieleranzahl, aktive Spielernamen und Namensverlauf (`recentNames`)

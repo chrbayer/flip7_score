@@ -16,6 +16,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Gewinnermittlung**: Gewinnerbildschirm mit Endstand bei 200+ Punkten
 - **Spiel abbrechen**: Button mit Dialog für gleiche/neue Spieler
 - **Neue Partie**: Scores und Status werden zurückgesetzt
+- **Round History**: Eingeklappte Übersicht vergangener Runden im Spielbildschirm
 
 ## Bildschirme
 
@@ -27,7 +28,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 
 - **Framework**: Flutter
 - **State Management**: StatefulWidget mit setState
-- **Datenmodell**: Player-Klasse (`name`, `score`, `hasEnteredScore`, `lastRoundScore`)
+- **Datenmodell**: Player-Klasse (`name`, `score`, `hasEnteredScore`, `lastRoundScore`), Round-Klasse (`roundNumber`, `scores`)
 - **Navigation**: Navigator mit anonymen Routes (MaterialPageRoute)
 - **Persistenz**: shared_preferences
 - **Design**: Material Design 3

@@ -215,4 +215,67 @@ void main() {
     // Long-Press Test für Spieler ohne Score wird aufgrund von Widget-Test-Komplexität übersprungen
     // Die Funktionalität ist durch player_test.dart abgedeckt (undoLastScore prüft hasEnteredScore)
   });
+
+  group('GameScreen Runden-Historie', () {
+    testWidgets('Runden-Historie erscheint nach Runde 1', (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final players = [
+        Player(name: 'Alice'),
+        Player(name: 'Bob'),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(home: GameScreen(players: players)),
+      );
+      await tester.pumpAndSettle();
+
+      // Runde 1: Alice 10, Bob 5
+      await tester.enterText(find.byType(TextField), '10');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '5');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+
+      // Historie sollte sichtbar sein
+      expect(find.text('Runden (1)'), findsOneWidget);
+      expect(find.byIcon(Icons.history), findsOneWidget);
+    });
+
+    testWidgets('Runden-Historie zeigt Scores nach Ausklappen', (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final players = [
+        Player(name: 'Alice'),
+        Player(name: 'Bob'),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(home: GameScreen(players: players)),
+      );
+      await tester.pumpAndSettle();
+
+      // Runde 1: Alice 10, Bob 5
+      await tester.enterText(find.byType(TextField), '10');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '5');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+
+      // Ausklappen
+      await tester.tap(find.text('Runden (1)'));
+      await tester.pumpAndSettle();
+
+      // Runde 1 sollte angezeigt werden
+      expect(find.text('Runde 1'), findsAtLeast(1));
+    });
+  });
 }
