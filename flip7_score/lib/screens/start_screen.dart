@@ -61,41 +61,51 @@ class _StartScreenState extends State<StartScreen> {
   }
 
   Future<void> _loadSavedData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedCount = prefs.getInt('playerCount') ?? 2;
-    final savedNames = prefs.getStringList('playerNames') ?? [];
-    final savedRecent = prefs.getStringList('recentNames') ?? [];
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedCount = prefs.getInt('playerCount') ?? 2;
+      final savedNames = prefs.getStringList('playerNames') ?? [];
+      final savedRecent = prefs.getStringList('recentNames') ?? [];
 
-    setState(() {
-      _playerCount = savedCount;
-      _recentNames = savedRecent;
+      setState(() {
+        _playerCount = savedCount;
+        _recentNames = savedRecent;
 
-      for (var c in _nameControllers) c.dispose();
-      for (var f in _nameFocusNodes) f.dispose();
-      _nameControllers.clear();
-      _nameFocusNodes.clear();
-      _committedNames.clear();
+        for (var c in _nameControllers) c.dispose();
+        for (var f in _nameFocusNodes) f.dispose();
+        _nameControllers.clear();
+        _nameFocusNodes.clear();
+        _committedNames.clear();
 
-      for (int i = 0; i < savedCount; i++) {
-        final name = (i < savedNames.length && savedNames[i].isNotEmpty)
-            ? savedNames[i]
-            : 'Spieler ${i + 1}';
-        _addController(name);
-      }
-    });
+        for (int i = 0; i < savedCount; i++) {
+          final name = (i < savedNames.length && savedNames[i].isNotEmpty)
+              ? savedNames[i]
+              : 'Spieler ${i + 1}';
+          _addController(name);
+        }
+      });
+    } catch (e) {
+      // Fallback auf Standardwerte bei Fehler
+      debugPrint('Fehler beim Laden der Daten: $e');
+    }
   }
 
   Future<void> _saveData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('playerCount', _playerCount);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('playerCount', _playerCount);
 
-    final names = _nameControllers
-        .map((c) => c.text.trim().isEmpty
-            ? 'Spieler ${_nameControllers.indexOf(c) + 1}'
-            : c.text.trim())
-        .toList();
-    await prefs.setStringList('playerNames', names);
-    await prefs.setStringList('recentNames', _recentNames);
+      final names = _nameControllers
+          .map((c) => c.text.trim().isEmpty
+              ? 'Spieler ${_nameControllers.indexOf(c) + 1}'
+              : c.text.trim())
+          .toList();
+      await prefs.setStringList('playerNames', names);
+      await prefs.setStringList('recentNames', _recentNames);
+    } catch (e) {
+      // Fehler ignorieren, Spiel läuft weiter
+      debugPrint('Fehler beim Speichern der Daten: $e');
+    }
   }
 
   void _updatePlayerCount(int count) {

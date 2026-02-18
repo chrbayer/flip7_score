@@ -47,7 +47,7 @@ class WinnerScreen extends StatelessWidget {
         foregroundColor: Colors.black,
         automaticallyImplyLeading: false,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
