@@ -212,8 +212,30 @@ void main() {
       expect(find.text('Eingabe für: Alice'), findsOneWidget);
     });
 
-    // Long-Press Test für Spieler ohne Score wird aufgrund von Widget-Test-Komplexität übersprungen
-    // Die Funktionalität ist durch player_test.dart abgedeckt (undoLastScore prüft hasEnteredScore)
+    testWidgets('Long-Press auf Spieler ohne Score ändert nichts', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(home: GameScreen(players: players)),
+      );
+      await tester.pumpAndSettle();
+
+      // Alice gibt Punkte ein
+      await tester.enterText(find.byType(TextField), '10');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+
+      // Alice hat jetzt 10 Punkte, Bob 0
+      expect(find.text('10 Punkte'), findsOneWidget);
+      expect(find.text('0 Punkte'), findsOneWidget);
+
+      // Bob hat noch keine Punkte (Long-Press sollte nichts tun)
+      final bobTile = find.text('Bob');
+      await tester.longPress(bobTile);
+      await tester.pumpAndSettle();
+
+      // Scores sollten unverändert sein
+      expect(find.text('10 Punkte'), findsOneWidget);
+      expect(find.text('0 Punkte'), findsOneWidget);
+    });
   });
 
   group('GameScreen Runden-Historie', () {

@@ -194,5 +194,36 @@ void main() {
       expect(find.text('Max'), findsAtLeast(1));
       expect(find.text('Max (1)'), findsOneWidget);
     });
+
+    testWidgets('Drei gleiche Namen werden zu Max, Max (1), Max (2)', (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        const MaterialApp(home: StartScreen()),
+      );
+      await tester.pumpAndSettle();
+
+      // Anzahl auf 3 erhöhen
+      await tester.tap(find.byIcon(Icons.add_circle));
+      await tester.pumpAndSettle();
+
+      // Alle 3 Spieler auf "Max" setzen
+      final textFields = find.byType(TextField);
+      await tester.enterText(textFields.at(0), 'Max');
+      await tester.enterText(textFields.at(1), 'Max');
+      await tester.enterText(textFields.at(2), 'Max');
+      await tester.pumpAndSettle();
+
+      // Spiel starten
+      await tester.tap(find.text('Spiel starten'));
+      await tester.pumpAndSettle();
+
+      // Sollte alle drei Varianten im Dialog zeigen (nicht in den TextFields)
+      // Wir prüfen nur auf die erweiterten Namen, nicht auf "Max" allgemein
+      expect(find.text('Max (1)'), findsOneWidget);
+      expect(find.text('Max (2)'), findsOneWidget);
+    });
   });
 }

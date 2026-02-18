@@ -1,8 +1,8 @@
 # Flip7 Score - Todo / Improvements
 
 ## Tests (offen)
-- [ ] Undo Long-Press Widget-Test (Komplexität der Widget-Hierarchie)
-- [ ] Weitere Edge-Cases für Deduplizierung
+- [x] Undo Long-Press Widget-Test
+- [x] Weitere Edge-Cases für Deduplizierung
 
 ## Features
 - [x] Runden-Historie anzeigen (IMPLEMENTIERT)
