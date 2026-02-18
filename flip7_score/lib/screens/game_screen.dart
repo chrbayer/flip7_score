@@ -25,6 +25,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   final FocusNode _scoreFocusNode = FocusNode();
   final List<Round> _roundHistory = [];
   bool _historyExpanded = false;
+  Map<int, int>? _pendingRoundState; // playerIndex → score bei Runden-Undo
   late AnimationController _roundAnimationController;
   late Animation<double> _roundScaleAnimation;
   late AnimationController _scoreAnimationController;
@@ -124,6 +125,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       final round = Round(
         roundNumber: _currentRound,
         playerScores: roundScores,
+        lastPlayerIndex: _selectedPlayerIndex!,
       );
       _roundHistory.add(round);
 
@@ -131,14 +133,29 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _updateRoundStats(round);
 
       // Runde abschließen und zur nächsten wechseln
+      final savedPending = _pendingRoundState;
+      _pendingRoundState = null;
+
       setState(() {
         for (var player in widget.players) {
           player.resetRoundScore();
         }
         _currentRound++;
-        // Ersten Spieler auswählen der noch keinen Score hat (alle sind falsch)
-        _selectedPlayerIndex = 0;
         _scoreController.clear();
+
+        if (savedPending != null && savedPending.isNotEmpty) {
+          // Unterbrochenen Rundenteilstand wiederherstellen
+          for (final entry in savedPending.entries) {
+            final player = widget.players[entry.key];
+            player.score += entry.value;
+            player.lastRoundScore = entry.value;
+            player.hasEnteredScore = true;
+          }
+          final idx = widget.players.indexWhere((p) => !p.hasEnteredScore);
+          _selectedPlayerIndex = idx < 0 ? 0 : idx;
+        } else {
+          _selectedPlayerIndex = 0;
+        }
       });
       // Runde-Animation starten
       _roundAnimationController.forward(from: 0);
@@ -251,6 +268,99 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _undoRoundStats(Round round) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final gamesJson = prefs.getString('gameStats');
+      GameStats gameStats = gamesJson != null
+          ? GameStats.fromJson(jsonDecode(gamesJson))
+          : GameStats();
+
+      final roundTotal = round.playerScores.values.fold(0, (a, b) => a + b);
+      gameStats.totalPointsAllPlayers =
+          (gameStats.totalPointsAllPlayers - roundTotal).clamp(0, double.maxFinite.toInt());
+
+      await prefs.setString('gameStats', jsonEncode(gameStats.toJson()));
+
+      final playersJson = prefs.getString('playerStats') ?? '[]';
+      final List<dynamic> playersData = jsonDecode(playersJson);
+      List<PlayerStats> playerStatsList =
+          playersData.map((e) => PlayerStats.fromJson(e)).toList();
+
+      for (final entry in round.playerScores.entries) {
+        final playerName = entry.key;
+        final roundScore = entry.value;
+
+        final existingIndex = playerStatsList.indexWhere(
+            (ps) => ps.playerName.toLowerCase() == playerName.toLowerCase());
+
+        if (existingIndex >= 0) {
+          final ps = playerStatsList[existingIndex];
+          playerStatsList[existingIndex] = ps.copyWith(
+            totalScore: (ps.totalScore - roundScore).clamp(0, ps.totalScore),
+            roundsPlayed: (ps.roundsPlayed - 1).clamp(0, ps.roundsPlayed),
+          );
+        }
+      }
+
+      await prefs.setString(
+          'playerStats', jsonEncode(playerStatsList.map((e) => e.toJson()).toList()));
+    } catch (e) {
+      debugPrint('Fehler beim Rückgängigmachen der Rundenstatistiken: $e');
+    }
+  }
+
+  void _undoLastRound() {
+    if (_currentRound <= 1 || _roundHistory.isEmpty) return;
+
+    HapticFeedback.mediumImpact();
+
+    // Aktuellen Teilstand der laufenden Runde sichern und rückgängig machen
+    final pendingState = <int, int>{};
+    for (int i = 0; i < widget.players.length; i++) {
+      final player = widget.players[i];
+      if (player.hasEnteredScore) {
+        pendingState[i] = player.lastRoundScore;
+        player.score -= player.lastRoundScore;
+        player.hasEnteredScore = false;
+        player.lastRoundScore = 0;
+      }
+    }
+    _pendingRoundState = pendingState.isNotEmpty ? pendingState : null;
+
+    final lastRound = _roundHistory.removeLast();
+    final lastPlayerIndex = lastRound.lastPlayerIndex;
+    final lastPlayer = widget.players[lastPlayerIndex];
+    final lastPlayerScore = lastRound.playerScores[lastPlayer.name] ?? 0;
+
+    // Alle Spieler außer dem letzten behalten ihren Rundenstand (hasEnteredScore = true),
+    // können aber per Long-Press noch geändert werden.
+    // Der letzte Spieler gibt seinen Score neu ein → sein Rundenanteil wird entfernt.
+    for (int i = 0; i < widget.players.length; i++) {
+      final player = widget.players[i];
+      final roundScore = lastRound.playerScores[player.name] ?? 0;
+      if (i == lastPlayerIndex) {
+        player.score -= roundScore;
+        player.hasEnteredScore = false;
+        player.lastRoundScore = 0;
+      } else {
+        player.hasEnteredScore = true;
+        player.lastRoundScore = roundScore;
+      }
+    }
+
+    setState(() {
+      _currentRound--;
+      _selectedPlayerIndex = lastPlayerIndex;
+      _scoreController.text = lastPlayerScore > 0 ? lastPlayerScore.toString() : '';
+      _lastAnimatedPlayer = null;
+    });
+
+    FocusScope.of(context).requestFocus(_scoreFocusNode);
+    _undoRoundStats(lastRound);
+  }
+
   void _showWinnerDialog() async {
     final winner = widget.players[_selectedPlayerIndex!];
 
@@ -360,17 +470,36 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    AnimatedBuilder(
-                      animation: _roundScaleAnimation,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _roundScaleAnimation.value,
-                          child: child,
-                        );
-                      },
-                      child: Text(
-                        'Runde $_currentRound',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    GestureDetector(
+                      onLongPress: _currentRound > 1 ? _undoLastRound : null,
+                      child: AnimatedBuilder(
+                        animation: _roundScaleAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _roundScaleAnimation.value,
+                            child: child,
+                          );
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Runde $_currentRound',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (_currentRound > 1) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.undo,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),

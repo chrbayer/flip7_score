@@ -9,7 +9,9 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Namensverlauf**: Beim Hinzufügen eines Spielers wird automatisch ein zuletzt verwendeter Name vorgeschlagen (kein Duplikat zu aktiven Spielern)
 - **Deduplizierung**: Doppelte Namen erhalten automatisch ein " (1)", " (2)" usw.; ein Dialog informiert alle Spieler vor Spielstart über ihre endgültigen Namen
 - **Punkteerfassung**: Jeder Spieler nur einmal pro Runde, leere Eingabe = 0
-- **Undo**: Langer Druck auf einen eingetragenen Spieler macht dessen letzten Score rückgängig
+- **Undo (einzelner Spieler)**: Langer Druck auf einen eingetragenen Spieler macht dessen letzten Score rückgängig
+- **Undo (Runde)**: Langer Druck auf die Runde-Zahl macht die letzte abgeschlossene Runde rückgängig
+- **Unterbrochene Runde wiederherstellen**: Bereits eingegebene Scores werden beim Rückgängig-Machen einer Runde gespeichert und beim nächsten Runde-Wechsel automatisch wiederhergestellt
 - **Rundenzähler**: Aktuelle Runde wird angezeigt
 - **Farbliche Markierung**: Grüner Hintergrund/Check für eingegebene Scores
 - **Automatischer Runde-Wechsel**: Wenn alle Spieler einen Score haben
@@ -29,7 +31,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 
 - **Framework**: Flutter
 - **State Management**: StatefulWidget mit setState
-- **Datenmodell**: Player-Klasse (`name`, `score`, `hasEnteredScore`, `lastRoundScore`), Round-Klasse (`roundNumber`, `scores`)
+- **Datenmodell**: Player-Klasse (`name`, `score`, `hasEnteredScore`, `lastRoundScore`), Round-Klasse (`roundNumber`, `scores`, `lastPlayerIndex`)
 - **Navigation**: Navigator mit anonymen Routes (MaterialPageRoute)
 - **Persistenz**: shared_preferences
 - **Design**: Material Design 3

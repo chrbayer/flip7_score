@@ -25,7 +25,9 @@
 - Leere Eingabe wird als 0 interpretiert
 - Farbliche Markierung (grün) zeigt Spieler mit bereits eingetragenem Score
 - Automatischer Runde-Wechsel sobald alle Spieler einen Score haben
-- **Undo**: Langer Druck auf einen bereits eingetragenen Spieler macht dessen letzten Score rückgängig
+- **Undo (einzelner Spieler)**: Langer Druck auf einen bereits eingetragenen Spieler macht dessen letzten Score rückgängig
+- **Undo (Runde)**: Langer Druck auf die Runde-Zahl macht die letzte abgeschlossene Runde rückgängig
+- **Unterbrochene Runde wiederherstellen**: Beim Rückgängig-Machen einer Runde werden bereits in der aktuellen Runde eingegebene Scores gespeichert und beim nächsten Runde-Wechsel automatisch wiederhergestellt
 
 ### 2.3 Gewinnbedingung
 - Sobald ein Spieler ≥ konfigurierbares Punktelimit erreicht, gewinnt dieser (Standard: 200, konfigurierbar in den Einstellungen)
@@ -101,7 +103,7 @@
 - **State Management**: StatefulWidget mit setState (einfache App)
 - **Datenmodell**:
   - Player-Klasse mit `name`, `score`, `hasEnteredScore`, `lastRoundScore` (für Undo)
-  - Round-Klasse mit `roundNumber` und `scores` (Map<SpielerName, Punkte>)
+  - Round-Klasse mit `roundNumber`, `scores` (Map<SpielerName, Punkte>) und `lastPlayerIndex` (für Runde-Undo)
   - Statistics-Klasse für Spielstatistiken
 - **Navigation**: Navigator mit anonymen Routes (MaterialPageRoute)
 - **Widgets**: Material Design Components
