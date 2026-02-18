@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/stats.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/player.dart';
 import 'game_screen.dart';
 
@@ -386,8 +389,120 @@ class _StartScreenState extends State<StartScreen> {
               ),
               child: const Text('Spiel starten', style: TextStyle(fontSize: 18)),
             ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: () => _showStatsDialog(context),
+              icon: const Icon(Icons.bar_chart),
+              label: const Text('Statistiken'),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showStatsDialog(BuildContext context) async {
+    // Statistiken laden
+    final prefs = await SharedPreferences.getInstance();
+
+    // Spielstatistiken
+    final gamesJson = prefs.getString('gameStats');
+    GameStats gameStats = gamesJson != null
+        ? GameStats.fromJson(jsonDecode(gamesJson))
+        : GameStats();
+
+    // Spielerstatistiken
+    final playersJson = prefs.getString('playerStats') ?? '[]';
+    final List<dynamic> playersData = jsonDecode(playersJson);
+    List<PlayerStats> playerStatsList =
+        playersData.map((e) => PlayerStats.fromJson(e)).toList();
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Statistiken'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Gesamtstatistiken
+              const Text('Gesamt',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Spiele gespielt: ${gameStats.totalGamesPlayed}'),
+              Text('Höchste Runde (overall): ${gameStats.highestRoundScoreOverall}'),
+              Text('Punkte gesamt: ${gameStats.totalPointsAllPlayers}'),
+              Text(
+                  '∅ Punkte/Spiel: ${gameStats.averagePointsPerGame.toStringAsFixed(1)}'),
+              const Divider(height: 24),
+              // Spielerstatistiken
+              const Text('Pro Spieler',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              if (playerStatsList.isEmpty)
+                const Text('Noch keine Daten')
+              else
+                ...playerStatsList.map((ps) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(ps.playerName,
+                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text('  Höchste Runde: ${ps.highestRoundScore}'),
+                          Text('  ∅ Runde: ${ps.averageScore.toStringAsFixed(1)}'),
+                          Text('  Gespielte Runden: ${ps.roundsPlayed}'),
+                          Text('  Gesamt: ${ps.totalScore}'),
+                        ],
+                      ),
+                    )),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => _resetStats(context, prefs),
+            child: const Text('Zurücksetzen'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Schließen'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _resetStats(BuildContext context, SharedPreferences prefs) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Statistiken zurücksetzen?'),
+        content: const Text('Alle Statistiken werden gelöscht.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await prefs.remove('gameStats');
+              await prefs.remove('playerStats');
+              await prefs.remove('roundScores');
+              if (context.mounted) {
+                Navigator.pop(context); // Schließt Bestätigungsdialog
+                Navigator.pop(context); // Schließt Statistikdialog
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Statistiken zurückgesetzt')),
+                );
+              }
+            },
+            child: const Text('Zurücksetzen'),
+          ),
+        ],
       ),
     );
   }

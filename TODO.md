@@ -6,7 +6,7 @@
 
 ## Features
 - [x] Runden-Historie anzeigen (IMPLEMENTIERT)
-- [ ] Statistiken (Durchschnitt, höchste Runde, etc.)
+- [x] Statistiken (Durchschnitt, höchste Runde, etc.)
 - [x] Score-Limit konfigurierbar (nicht jeder spielt bis 200)
 - [x] Haptisches Feedback bei Punkteeingabe und Undo
 - [x] Animationen für Runde-Wechsel und Gewinner

@@ -28,9 +28,10 @@
 - **Undo**: Langer Druck auf einen bereits eingetragenen Spieler macht dessen letzten Score rückgängig
 
 ### 2.3 Gewinnbedingung
-- Sobald ein Spieler ≥ konfigurierbares Punktelimit erreicht, gewinnt dieser (Standard: 200)
+- Sobald ein Spieler ≥ konfigurierbares Punktelimit erreicht, gewinnt dieser (Standard: 200, konfigurierbar in den Einstellungen)
 - Gewinner-Anzeige mit Namen und Punktestand
 - Option für neue Partie mit gleichen oder neuen Spielern
+- Animation bei Erreichen des Gewinnerstatus
 
 ### 2.4 Spiel abbrechen
 - Button zum Abbrechen des laufenden Spiels
@@ -40,24 +41,55 @@
 - Nach Spielende: Gewinnerbildschirm mit Endstand (sortiert nach Punkten)
 - "Mit gleichen Spielern weiterspielen": Alle Scores und Runde-Status zurücksetzen, Runde auf 1
 - "Neue Spieler auswählen": Zurück zum Startbildschirm für neue Spielerauswahl
+- Animierte Anzeige des Gewinners mit Konfetti-Effekt
 
 ### 2.6 Round History
 - Alle abgeschlossenen Runden werden gespeichert
 - Eingeklappte History-Ansicht im Spielbildschirm zeigt vergangene Runden
 - Pro Runde werden die Scores aller Spieler angezeigt
+- Animation beim Öffnen/Schließen der History
+
+### 2.7 Statistics (Statistiken)
+- Statistiken-Funktion über Button im Spielbildschirm zugänglich
+- Anzeige von:
+  - Gesamtzahl gespielter Partien
+  - Gewonnene Spiele pro Spieler
+  - Durchschnittliche Punktzahl pro Runde pro Spieler
+  - Höchster jemals erreichter Score
+  - Gesamtzahl gespielter Runden
+- Daten werden persistent gespeichert
+
+### 2.8 Haptic Feedback (Haptisches Feedback)
+- Vibrieren bei erfolgreicher Score-Eingabe
+- Vibrieren bei Undo-Aktion
+- Kurzes, diskretes Feedback für bessere Nutzererfahrung
+
+### 2.9 Dark Mode
+- Dunkelmodus-Unterstützung für bessere Lesbarkeit bei schlechten Lichtverhältnissen
+- Automatische Erkennung basierend auf Systemeinstellungen
+- Manuelles Umschalten zwischen Hell und Dunkel möglich
+- Farbschema passt sich automatisch an:
+  - Heller Modus: Weiß/Hellgrau Hintergrund, dunkler Text
+  - Dunkler Modus: Dunkelgrau/Schwarz Hintergrund, heller Text
+  - Primärfarbe bleibt Blau (#2196F3) für Konsistenz
 
 ## 3. UI/UX Design
 
 ### 3.1 Bildschirme
 1. **Startbildschirm**: Spielerauswahl (Anzahl + Namen)
-2. **Spielbildschirm**: Aktueller Spielstand, Runde, Punkteeingabe
+2. **Spielbildschirm**: Aktueller Spielstand, Runde, Punkteeingabe, Statistics-Button
 3. **Gewinnerbildschirm**: Gewinner-Anzeige, Endstand-Tabelle, "Neue Partie"-Option
+4. **Statistik-Bildschirm**: Übersicht aller Statistiken
 
 ### 3.2 Farbschema
 - Primär: Blau (#2196F3)
 - Sekundär: Orange (#FF9800)
-- Hintergrund: Weiß/Grau
+- Hintergrund (Hell): Weiß (#FFFFFF) / Grau (#F5F5F5)
+- Hintergrund (Dunkel): Dunkelgrau (#121212) / Anthrazit (#1E1E1E)
 - Gewinner: Gold (#FFD700)
+- Erfolgreiche Eingabe: Grün (#4CAF50)
+- Text (Hell): Schwarz (#212121)
+- Text (Dunkel): Weiß (#FFFFFF)
 
 ### 3.3 Layout
 - Übersichtliche Tabellenansicht der Spielstände
@@ -70,6 +102,13 @@
 - **Datenmodell**:
   - Player-Klasse mit `name`, `score`, `hasEnteredScore`, `lastRoundScore` (für Undo)
   - Round-Klasse mit `roundNumber` und `scores` (Map<SpielerName, Punkte>)
+  - Statistics-Klasse für Spielstatistiken
 - **Navigation**: Navigator mit anonymen Routes (MaterialPageRoute)
 - **Widgets**: Material Design Components
-- **Persistenz**: shared_preferences für Spieleranzahl, aktive Spielernamen und Namensverlauf (`recentNames`)
+- **Persistenz**: shared_preferences für Spieleranzahl, aktive Spielernamen, Namensverlauf (`recentNames`), Statistiken und Einstellungen
+- **Themes**: ThemeData für Hell/Dunkel-Modus mit CupertinoThemeBar
+- **Animationen**: AnimationController für:
+  - Runde-Wechsel (Fade/Scale)
+  - Score-Eingabe (kurzes Aufleuchten)
+  - Gewinner-Anzeige (Konfetti-Effekt mit confetti_widget)
+- **Haptisches Feedback**: HapticFeedback aus flutter/services für Vibrieren

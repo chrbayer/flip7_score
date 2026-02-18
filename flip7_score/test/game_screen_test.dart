@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flip7_score/models/player.dart';
 import 'package:flip7_score/screens/game_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   group('GameScreen', () {
@@ -79,6 +80,7 @@ void main() {
       await tester.enterText(find.byType(TextField), '5');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       // Runde sollte jetzt 2 sein
       expect(find.text('Runde 2'), findsOneWidget);
@@ -153,6 +155,7 @@ void main() {
     });
 
     testWidgets('Gewinner bei 200 Punkten', (tester) async {
+      SharedPreferences.setMockInitialValues({});
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -172,6 +175,7 @@ void main() {
       await tester.enterText(find.byType(TextField), '5');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
 
       // Sollte zum WinnerScreen navigieren
       expect(find.text('Gewinner!'), findsOneWidget);

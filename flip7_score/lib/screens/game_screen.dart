@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/stats.dart';
 import '../models/player.dart';
 import '../models/round.dart';
 import 'winner_screen.dart';
@@ -118,10 +121,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       for (var player in widget.players) {
         roundScores[player.name] = player.lastRoundScore;
       }
-      _roundHistory.add(Round(
+      final round = Round(
         roundNumber: _currentRound,
         playerScores: roundScores,
-      ));
+      );
+      _roundHistory.add(round);
+
+      // Statistiken nach jeder abgeschlossenen Runde aktualisieren
+      _updateRoundStats(round);
 
       // Runde abschließen und zur nächsten wechseln
       setState(() {
@@ -170,8 +177,86 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     });
   }
 
-  void _showWinnerDialog() {
+  Future<void> _updateRoundStats(Round round) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // GameStats: Rundenpunkte und höchsten Rundenscore aktualisieren
+      final gamesJson = prefs.getString('gameStats');
+      GameStats gameStats = gamesJson != null
+          ? GameStats.fromJson(jsonDecode(gamesJson))
+          : GameStats();
+
+      final roundTotal = round.playerScores.values.fold(0, (a, b) => a + b);
+      gameStats.totalPointsAllPlayers += roundTotal;
+
+      for (final score in round.playerScores.values) {
+        if (score > gameStats.highestRoundScoreOverall) {
+          gameStats.highestRoundScoreOverall = score;
+        }
+      }
+
+      await prefs.setString('gameStats', jsonEncode(gameStats.toJson()));
+
+      // Spieler-Statistiken aktualisieren
+      final playersJson = prefs.getString('playerStats') ?? '[]';
+      final List<dynamic> playersData = jsonDecode(playersJson);
+      List<PlayerStats> playerStatsList =
+          playersData.map((e) => PlayerStats.fromJson(e)).toList();
+
+      for (final entry in round.playerScores.entries) {
+        final playerName = entry.key;
+        final roundScore = entry.value;
+
+        final existingIndex = playerStatsList.indexWhere(
+            (ps) => ps.playerName.toLowerCase() == playerName.toLowerCase());
+
+        if (existingIndex >= 0) {
+          final ps = playerStatsList[existingIndex];
+          playerStatsList[existingIndex] = ps.copyWith(
+            highestRoundScore: roundScore > ps.highestRoundScore
+                ? roundScore
+                : ps.highestRoundScore,
+            totalScore: ps.totalScore + roundScore,
+            roundsPlayed: ps.roundsPlayed + 1,
+          );
+        } else {
+          playerStatsList.add(PlayerStats(
+            playerName: playerName,
+            highestRoundScore: roundScore,
+            totalScore: roundScore,
+            roundsPlayed: 1,
+          ));
+        }
+      }
+
+      await prefs.setString(
+          'playerStats', jsonEncode(playerStatsList.map((e) => e.toJson()).toList()));
+    } catch (e) {
+      debugPrint('Fehler beim Speichern der Rundenstatistiken: $e');
+    }
+  }
+
+  Future<void> _updateGameStats() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final gamesJson = prefs.getString('gameStats');
+      GameStats gameStats = gamesJson != null
+          ? GameStats.fromJson(jsonDecode(gamesJson))
+          : GameStats();
+      gameStats.totalGamesPlayed++;
+      await prefs.setString('gameStats', jsonEncode(gameStats.toJson()));
+    } catch (e) {
+      debugPrint('Fehler beim Speichern der Spielstatistiken: $e');
+    }
+  }
+
+  void _showWinnerDialog() async {
     final winner = widget.players[_selectedPlayerIndex!];
+
+    // Spielzähler aktualisieren
+    await _updateGameStats();
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
