@@ -7,14 +7,14 @@
 ## Features
 - [x] Runden-Historie anzeigen (IMPLEMENTIERT)
 - [ ] Statistiken (Durchschnitt, höchste Runde, etc.)
-- [ ] Score-Limit konfigurierbar (nicht jeder spielt bis 200)
+- [x] Score-Limit konfigurierbar (nicht jeder spielt bis 200)
 - [x] Haptisches Feedback bei Punkteeingabe und Undo
 - [ ] Animationen für Runde-Wechsel und Gewinner
 
 ## UI/UX
 - [ ] Dark Mode Support
 - [x] Tastatur-Shortcuts (Enter = absenden)
-- [ ] UX-Hinweis bei Undo mit 0-Score
+- [x] UX-Hinweis bei Undo mit 0-Score (nicht nötig - grüner Haken zeigt Rückgang)
 
 ## Technisch
 - [x] Fehlerbehandlung bei SharedPreferences

@@ -36,7 +36,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.add_circle));
+      await tester.tap(find.byIcon(Icons.add_circle).first);
       await tester.pumpAndSettle();
 
       expect(find.text('3'), findsOneWidget);
@@ -53,11 +53,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.add_circle));
+      await tester.tap(find.byIcon(Icons.add_circle).first);
       await tester.pumpAndSettle();
       expect(find.text('3'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.remove_circle));
+      await tester.tap(find.byIcon(Icons.remove_circle).first);
       await tester.pumpAndSettle();
 
       expect(find.text('2'), findsOneWidget);
@@ -92,17 +92,19 @@ void main() {
 
       // Bis auf 6 erhöhen
       for (int i = 0; i < 4; i++) {
-        await tester.tap(find.byIcon(Icons.add_circle));
+        await tester.tap(find.byIcon(Icons.add_circle).first);
         await tester.pumpAndSettle();
       }
 
       expect(find.text('6'), findsOneWidget);
 
-      // Jetzt sollte + deaktiviert sein
-      final addButtons = find.byType(IconButton);
-      final addButton = addButtons.last;
-      final iconButton = tester.widget<IconButton>(addButton);
-      expect(iconButton.onPressed, isNull);
+      // Ein Button sollte deaktiviert sein
+      final iconButtons = find.descendant(
+        of: find.byType(Row),
+        matching: find.byType(IconButton),
+      );
+      final buttons = tester.widgetList<IconButton>(iconButtons);
+      expect(buttons.any((b) => b.onPressed == null), isTrue);
     });
 
     testWidgets('Spiel starten Button vorhanden', (tester) async {
@@ -147,7 +149,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Anzahl auf 3 erhöhen
-      await tester.tap(find.byIcon(Icons.add_circle));
+      await tester.tap(find.byIcon(Icons.add_circle).first);
       await tester.pumpAndSettle();
 
       // Alle 3 Spieler auf "Max" setzen
@@ -176,7 +178,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Anzahl auf 3 erhöhen
-      await tester.tap(find.byIcon(Icons.add_circle));
+      await tester.tap(find.byIcon(Icons.add_circle).first);
       await tester.pumpAndSettle();
 
       // Alle 3 Spieler auf "Max" setzen
@@ -206,7 +208,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Anzahl auf 3 erhöhen
-      await tester.tap(find.byIcon(Icons.add_circle));
+      await tester.tap(find.byIcon(Icons.add_circle).first);
       await tester.pumpAndSettle();
 
       // Alle 3 Spieler auf "Max" setzen

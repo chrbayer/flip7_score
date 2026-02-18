@@ -7,8 +7,9 @@ import 'start_screen.dart';
 
 class GameScreen extends StatefulWidget {
   final List<Player> players;
+  final int scoreLimit;
 
-  const GameScreen({super.key, required this.players});
+  const GameScreen({super.key, required this.players, this.scoreLimit = 200});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -61,7 +62,7 @@ class _GameScreenState extends State<GameScreen> {
       widget.players[_selectedPlayerIndex!].hasEnteredScore = true;
 
       // Check for winner
-      if (widget.players[_selectedPlayerIndex!].score >= 200) {
+      if (widget.players[_selectedPlayerIndex!].score >= widget.scoreLimit) {
         _showWinnerDialog();
         return;
       }
@@ -363,7 +364,7 @@ class _GameScreenState extends State<GameScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: player.score >= 200
+                              color: player.score >= widget.scoreLimit
                                   ? Colors.green
                                   : Theme.of(context).colorScheme.primary,
                             ),

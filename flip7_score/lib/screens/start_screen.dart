@@ -12,6 +12,7 @@ class StartScreen extends StatefulWidget {
 
 class _StartScreenState extends State<StartScreen> {
   int _playerCount = 2;
+  int _scoreLimit = 200;
   final List<TextEditingController> _nameControllers = [];
   final List<FocusNode> _nameFocusNodes = [];
   // Zuletzt bestätigte Namen (parallel zu _nameControllers),
@@ -64,11 +65,13 @@ class _StartScreenState extends State<StartScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedCount = prefs.getInt('playerCount') ?? 2;
+      final savedLimit = prefs.getInt('scoreLimit') ?? 200;
       final savedNames = prefs.getStringList('playerNames') ?? [];
       final savedRecent = prefs.getStringList('recentNames') ?? [];
 
       setState(() {
         _playerCount = savedCount;
+        _scoreLimit = savedLimit;
         _recentNames = savedRecent;
 
         for (var c in _nameControllers) c.dispose();
@@ -94,6 +97,7 @@ class _StartScreenState extends State<StartScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('playerCount', _playerCount);
+      await prefs.setInt('scoreLimit', _scoreLimit);
 
       final names = _nameControllers
           .map((c) => c.text.trim().isEmpty
@@ -221,7 +225,7 @@ class _StartScreenState extends State<StartScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => GameScreen(players: _players),
+                    builder: (context) => GameScreen(players: _players, scoreLimit: _scoreLimit),
                   ),
                 );
               },
@@ -234,7 +238,7 @@ class _StartScreenState extends State<StartScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => GameScreen(players: _players),
+          builder: (context) => GameScreen(players: _players, scoreLimit: _scoreLimit),
         ),
       );
     }
@@ -296,6 +300,45 @@ class _StartScreenState extends State<StartScreen> {
                 IconButton(
                   onPressed: _playerCount < 6
                       ? () => _updatePlayerCount(_playerCount + 1)
+                      : null,
+                  icon: const Icon(Icons.add_circle),
+                  iconSize: 36,
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Gewinn-Limit (Punkte)',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: _scoreLimit > 50
+                      ? () => setState(() => _scoreLimit -= 50)
+                      : null,
+                  icon: const Icon(Icons.remove_circle),
+                  iconSize: 36,
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Theme.of(context).colorScheme.primary),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$_scoreLimit',
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  onPressed: _scoreLimit < 500
+                      ? () => setState(() => _scoreLimit += 50)
                       : null,
                   icon: const Icon(Icons.add_circle),
                   iconSize: 36,

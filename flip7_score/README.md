@@ -13,7 +13,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Rundenzähler**: Aktuelle Runde wird angezeigt
 - **Farbliche Markierung**: Grüner Hintergrund/Check für eingegebene Scores
 - **Automatischer Runde-Wechsel**: Wenn alle Spieler einen Score haben
-- **Gewinnermittlung**: Gewinnerbildschirm mit Endstand bei 200+ Punkten
+- **Gewinnermittlung**: Gewinnerbildschirm mit Endstand bei konfigurierbarem Punktelimit
 - **Spiel abbrechen**: Button mit Dialog für gleiche/neue Spieler
 - **Neue Partie**: Scores und Status werden zurückgesetzt
 - **Round History**: Eingeklappte Übersicht vergangener Runden im Spielbildschirm

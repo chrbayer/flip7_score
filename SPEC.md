@@ -4,7 +4,7 @@
 
 - **Projektname**: flip7_score
 - **Projekttyp**: Flutter Android App
-- **Kernfunktion**: Spielstand-Verwaltung für das Kartenspiel Flip 7 - Punkte pro Runde erfassen und aufaddieren, Gewinner bei 200 Punkten ermitteln
+- **Kernfunktion**: Spielstand-Verwaltung für das Kartenspiel Flip 7 - Punkte pro Runde erfassen und aufaddieren, Gewinner bei konfigurierbarem Punktelimit ermitteln
 
 ## 2. Anforderungen
 
@@ -28,7 +28,7 @@
 - **Undo**: Langer Druck auf einen bereits eingetragenen Spieler macht dessen letzten Score rückgängig
 
 ### 2.3 Gewinnbedingung
-- Sobald ein Spieler ≥ 200 Punkte erreicht, gewinnt dieser
+- Sobald ein Spieler ≥ konfigurierbares Punktelimit erreicht, gewinnt dieser (Standard: 200)
 - Gewinner-Anzeige mit Namen und Punktestand
 - Option für neue Partie mit gleichen oder neuen Spielern
 
