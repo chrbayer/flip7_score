@@ -57,7 +57,7 @@
 ### 3.3 Layout
 - Übersichtliche Tabellenansicht der Spielstände
 - Große, gut lesbare Schrift
-- Einfache Navigation mit Zurück-Button
+- Kein Zurück-Button auf beiden Bildschirmen (Startbildschirm ist erster Screen, Spielbildschirm wird abgebrochen über Schaltfläche)
 
 ## 4. Technische Umsetzung
 

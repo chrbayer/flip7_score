@@ -176,6 +176,7 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Flip 7 - Spielstand'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
