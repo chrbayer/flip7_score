@@ -15,19 +15,50 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   int _currentRound = 1;
   int? _selectedPlayerIndex;
   final TextEditingController _scoreController = TextEditingController();
   final FocusNode _scoreFocusNode = FocusNode();
   final List<Round> _roundHistory = [];
   bool _historyExpanded = false;
+  late AnimationController _roundAnimationController;
+  late Animation<double> _roundScaleAnimation;
+  late AnimationController _scoreAnimationController;
+  late Animation<double> _scoreScaleAnimation;
+  String? _lastAnimatedPlayer;
 
   @override
   void initState() {
     super.initState();
     // Ersten Spieler auswählen
     _selectedPlayerIndex = 0;
+
+    // Runde-Animationscontroller
+    _roundAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _roundScaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.2), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.2, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(
+      parent: _roundAnimationController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Score-Animationscontroller
+    _scoreAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scoreScaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(
+      parent: _scoreAnimationController,
+      curve: Curves.easeInOut,
+    ));
   }
 
   void _selectPlayer(int index) {
@@ -56,6 +87,9 @@ class _GameScreenState extends State<GameScreen> {
     // Leichte Vibration bei erfolgreicher Eingabe
     HapticFeedback.lightImpact();
 
+    // Spieler für Animation merken
+    final playerName = widget.players[_selectedPlayerIndex!].name;
+
     setState(() {
       widget.players[_selectedPlayerIndex!].lastRoundScore = score;
       widget.players[_selectedPlayerIndex!].score += score;
@@ -70,6 +104,10 @@ class _GameScreenState extends State<GameScreen> {
       // Prüfen ob alle Spieler einen Score haben
       _checkRoundComplete();
     });
+
+    // Score-Animation starten
+    _lastAnimatedPlayer = playerName;
+    _scoreAnimationController.forward(from: 0);
   }
 
   void _checkRoundComplete() {
@@ -95,6 +133,8 @@ class _GameScreenState extends State<GameScreen> {
         _selectedPlayerIndex = 0;
         _scoreController.clear();
       });
+      // Runde-Animation starten
+      _roundAnimationController.forward(from: 0);
       // Fokus auf TextField setzen
       FocusScope.of(context).requestFocus(_scoreFocusNode);
     } else {
@@ -203,6 +243,8 @@ class _GameScreenState extends State<GameScreen> {
   void dispose() {
     _scoreController.dispose();
     _scoreFocusNode.dispose();
+    _roundAnimationController.dispose();
+    _scoreAnimationController.dispose();
     super.dispose();
   }
 
@@ -233,9 +275,18 @@ class _GameScreenState extends State<GameScreen> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    Text(
-                      'Runde $_currentRound',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    AnimatedBuilder(
+                      animation: _roundScaleAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _roundScaleAnimation.value,
+                          child: child,
+                        );
+                      },
+                      child: Text(
+                        'Runde $_currentRound',
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     if (_selectedPlayerIndex != null)
@@ -359,14 +410,24 @@ class _GameScreenState extends State<GameScreen> {
                               color: hasEntered ? Colors.green[700] : null,
                             ),
                           ),
-                          trailing: Text(
-                            '${player.score} Punkte',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: player.score >= widget.scoreLimit
-                                  ? Colors.green
-                                  : Theme.of(context).colorScheme.primary,
+                          trailing: AnimatedBuilder(
+                            animation: _scoreScaleAnimation,
+                            builder: (context, child) {
+                              final shouldAnimate = _lastAnimatedPlayer == player.name;
+                              return Transform.scale(
+                                scale: shouldAnimate ? _scoreScaleAnimation.value : 1.0,
+                                child: child,
+                              );
+                            },
+                            child: Text(
+                              '${player.score} Punkte',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: player.score >= widget.scoreLimit
+                                    ? Colors.green
+                                    : Theme.of(context).colorScheme.primary,
+                              ),
                             ),
                           ),
                         ),

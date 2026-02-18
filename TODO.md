@@ -9,7 +9,7 @@
 - [ ] Statistiken (Durchschnitt, höchste Runde, etc.)
 - [x] Score-Limit konfigurierbar (nicht jeder spielt bis 200)
 - [x] Haptisches Feedback bei Punkteeingabe und Undo
-- [ ] Animationen für Runde-Wechsel und Gewinner
+- [x] Animationen für Runde-Wechsel und Gewinner
 
 ## UI/UX
 - [x] Dark Mode Support
