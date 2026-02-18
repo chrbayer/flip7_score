@@ -8,7 +8,7 @@
 - [x] Animationen für Runde-Wechsel und Gewinner
 - [x] Undo für komplette Runde (Long-Press auf Runde-Zahl mit Undo-Icon)
 - [x] Unterbrochene Runde wiederherstellen nach Runde-Undo
-- [x] Tests (67 Unit- und Widget-Tests)
+- [x] Tests (77 Unit- und Widget-Tests)
 
 ## UI/UX
 - [x] Tablet-Layout für größere Bildschirme optimieren
@@ -16,8 +16,8 @@
 - [x] Drag-and-drop zur Spieler-Reihenfolge im StartScreen
 
 ## Statistiken erweitern
-- [ ] Siege pro Spieler tracken (gamesWon) und Siegesquote anzeigen (gamesWon / gamesPlayed)
-- [ ] Durchschnittlicher Score pro Runde pro Spieler anzeigen
+- [x] Siege pro Spieler tracken (gamesWon) und Siegesquote anzeigen (gamesWon / gamesPlayed)
+- [x] Durchschnittlicher Score pro Runde pro Spieler anzeigen
 
 ## Technisch
 - [x] Fehlerbehandlung bei SharedPreferences

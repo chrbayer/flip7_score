@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/stats.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/player.dart';
 import 'game_screen.dart';
 
@@ -657,6 +656,10 @@ class _StartScreenState extends State<StartScreen> {
                         children: [
                           Text(ps.playerName,
                               style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text('  Siege: ${ps.gamesWon}'),
+                          Text('  Spiele gespielt: ${ps.gamesPlayed}'),
+                          Text('  Siegrate: ${(ps.winRate * 100).toStringAsFixed(1)}%'),
+                          const Divider(height: 8),
                           Text('  Höchste Runde: ${ps.highestRoundScore}'),
                           Text('  ∅ Runde: ${ps.averageScore.toStringAsFixed(1)}'),
                           Text('  Gespielte Runden: ${ps.roundsPlayed}'),

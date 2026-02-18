@@ -270,7 +270,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _undoRoundStats(Round round) async {
+  Future<void> _undoRoundStats(Round round, {bool isWinningRound = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -299,9 +299,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
         if (existingIndex >= 0) {
           final ps = playerStatsList[existingIndex];
+          // Gewinnername ermitteln aus lastPlayerIndex
+          final winnerName = round.lastPlayerIndex != null && round.lastPlayerIndex! < widget.players.length
+              ? widget.players[round.lastPlayerIndex!].name
+              : '';
           playerStatsList[existingIndex] = ps.copyWith(
             totalScore: (ps.totalScore - roundScore).clamp(0, ps.totalScore),
             roundsPlayed: (ps.roundsPlayed - 1).clamp(0, ps.roundsPlayed),
+            // Bei Gewinner-Runde: Spiele gespielt und gewonnen reduzieren
+            gamesPlayed: isWinningRound
+                ? (ps.gamesPlayed - 1).clamp(0, ps.gamesPlayed)
+                : ps.gamesPlayed,
+            gamesWon: isWinningRound && ps.playerName.toLowerCase() == winnerName.toLowerCase()
+                ? (ps.gamesWon - 1).clamp(0, ps.gamesWon)
+                : ps.gamesWon,
           );
         }
       }
@@ -310,6 +321,43 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           'playerStats', jsonEncode(playerStatsList.map((e) => e.toJson()).toList()));
     } catch (e) {
       debugPrint('Fehler beim Rückgängigmachen der Rundenstatistiken: $e');
+    }
+  }
+
+  /// Aktualisiert Spieler-Statistiken wenn ein Gewinner ermittelt wird
+  Future<void> _updateGamePlayerStats(List<Player> players, Player winner) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final playersJson = prefs.getString('playerStats') ?? '[]';
+      final List<dynamic> playersData = jsonDecode(playersJson);
+      List<PlayerStats> playerStatsList =
+          playersData.map((e) => PlayerStats.fromJson(e)).toList();
+
+      for (final player in players) {
+        final existingIndex = playerStatsList.indexWhere(
+            (ps) => ps.playerName.toLowerCase() == player.name.toLowerCase());
+
+        if (existingIndex >= 0) {
+          final ps = playerStatsList[existingIndex];
+          playerStatsList[existingIndex] = ps.copyWith(
+            gamesPlayed: ps.gamesPlayed + 1,
+            gamesWon: player.name.toLowerCase() == winner.name.toLowerCase()
+                ? ps.gamesWon + 1
+                : ps.gamesWon,
+          );
+        } else {
+          playerStatsList.add(PlayerStats(
+            playerName: player.name,
+            gamesPlayed: 1,
+            gamesWon: player.name.toLowerCase() == winner.name.toLowerCase() ? 1 : 0,
+          ));
+        }
+      }
+
+      await prefs.setString(
+          'playerStats', jsonEncode(playerStatsList.map((e) => e.toJson()).toList()));
+    } catch (e) {
+      debugPrint('Fehler beim Aktualisieren der Spielerstatistiken: $e');
     }
   }
 
@@ -383,6 +431,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     // Spielzähler aktualisieren
     await _updateGameStats();
 
+    // Spieler-Statistiken für Gewinn aktualisieren
+    await _updateGamePlayerStats(widget.players, winner);
+
     if (!mounted) return;
 
     final undone = await Navigator.push<bool>(
@@ -397,7 +448,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     if (undone == true && mounted) {
       _roundHistory.removeLast();
-      await _undoRoundStats(winningRound);
+      await _undoRoundStats(winningRound, isWinningRound: true);
       await _undoGameStats();
       winner.score -= winnerLastScore;
       winner.hasEnteredScore = false;

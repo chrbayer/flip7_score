@@ -9,6 +9,8 @@ void main() {
       expect(stats.highestRoundScore, 0);
       expect(stats.totalScore, 0);
       expect(stats.roundsPlayed, 0);
+      expect(stats.gamesWon, 0);
+      expect(stats.gamesPlayed, 0);
     });
 
     test('averageScore berechnet korrekt', () {
@@ -21,18 +23,32 @@ void main() {
       expect(stats.averageScore, 0.0);
     });
 
+    test('winRate berechnet korrekt', () {
+      final stats = PlayerStats(playerName: 'Max', gamesWon: 3, gamesPlayed: 10);
+      expect(stats.winRate, 0.3);
+    });
+
+    test('winRate gibt 0 zurück bei 0 Spielen', () {
+      final stats = PlayerStats(playerName: 'Max', gamesWon: 0, gamesPlayed: 0);
+      expect(stats.winRate, 0.0);
+    });
+
     test('toJson erstellt korrekte Map', () {
       final stats = PlayerStats(
         playerName: 'Max',
         highestRoundScore: 50,
         totalScore: 150,
         roundsPlayed: 3,
+        gamesWon: 2,
+        gamesPlayed: 5,
       );
       final json = stats.toJson();
       expect(json['playerName'], 'Max');
       expect(json['highestRoundScore'], 50);
       expect(json['totalScore'], 150);
       expect(json['roundsPlayed'], 3);
+      expect(json['gamesWon'], 2);
+      expect(json['gamesPlayed'], 5);
     });
 
     test('fromJson erstellt korrektes Objekt', () {
@@ -41,12 +57,16 @@ void main() {
         'highestRoundScore': 50,
         'totalScore': 150,
         'roundsPlayed': 3,
+        'gamesWon': 2,
+        'gamesPlayed': 5,
       };
       final stats = PlayerStats.fromJson(json);
       expect(stats.playerName, 'Max');
       expect(stats.highestRoundScore, 50);
       expect(stats.totalScore, 150);
       expect(stats.roundsPlayed, 3);
+      expect(stats.gamesWon, 2);
+      expect(stats.gamesPlayed, 5);
     });
 
     test('fromJson mit fehlenden Werten verwendet Standardwerte', () {
@@ -55,14 +75,18 @@ void main() {
       expect(stats.highestRoundScore, 0);
       expect(stats.totalScore, 0);
       expect(stats.roundsPlayed, 0);
+      expect(stats.gamesWon, 0);
+      expect(stats.gamesPlayed, 0);
     });
 
     test('copyWith erstellt Kopie mit geänderten Werten', () {
       final stats = PlayerStats(playerName: 'Max', totalScore: 100);
-      final copied = stats.copyWith(totalScore: 150, roundsPlayed: 2);
+      final copied = stats.copyWith(totalScore: 150, roundsPlayed: 2, gamesWon: 3, gamesPlayed: 5);
       expect(copied.playerName, 'Max');
       expect(copied.totalScore, 150);
       expect(copied.roundsPlayed, 2);
+      expect(copied.gamesWon, 3);
+      expect(copied.gamesPlayed, 5);
     });
   });
 

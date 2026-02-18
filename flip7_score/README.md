@@ -17,7 +17,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Farbliche Markierung**: Grüner Hintergrund/Check für eingegebene Scores
 - **Automatischer Runde-Wechsel**: Wenn alle Spieler einen Score haben
 - **Konfigurierbares Punktelimit**: Einstellbar von 50-500 Punkten (Standard: 200)
-- **Statistiken**: Gesamtstatistiken (Spiele gespielt, höchste Runde, Gesamtpunkte, ∅ Punkte/Spiel) und Spielerstatistiken (höchste Runde, ∅ Runde, gespielte Runden, Gesamtpunktzahl) mit Zurücksetzen-Funktion
+- **Statistiken**: Gesamtstatistiken (Spiele gespielt, höchste Runde, Gesamtpunkte, ∅ Punkte/Spiel) und Spielerstatistiken (Siege, Spiele gespielt, Siegrate, höchste Runde, ∅ Runde, gespielte Runden, Gesamtpunktzahl) mit Zurücksetzen-Funktion
 - **Rückkehr vom Gewinner-Bildschirm**: "Zurück zum Spiel"-Button mit Bestätigungsdialog bei versehentlicher Gewinner-Auslösung
 - **Spiel abbrechen**: Button mit Dialog für gleiche/neue Spieler
 - **Neue Partie**: Scores und Status werden zurückgesetzt
@@ -38,7 +38,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Persistenz**: shared_preferences
 - **Design**: Material Design 3
 - **Responsive Layout**: Optimiert für Tablets (≥600dp) mit 2-Spalten-Layout
-- **Tests**: 67 Unit- und Widget-Tests
+- **Tests**: 77 Unit- und Widget-Tests
 
 ## Farbschema
 

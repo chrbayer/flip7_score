@@ -53,10 +53,11 @@
 - Animation beim Öffnen/Schließen der History
 
 ### 2.7 Statistics (Statistiken)
-- Statistiken-Funktion über Button im Spielbildschirm zugänglich
+- Statistiken-Funktion über Button im Startbildschirm zugänglich
 - Anzeige von:
   - Gesamtzahl gespielter Partien
   - Gewonnene Spiele pro Spieler
+  - Siegrate pro Spieler (gamesWon / gamesPlayed)
   - Durchschnittliche Punktzahl pro Runde pro Spieler
   - Höchster jemals erreichter Score
   - Gesamtzahl gespielter Runden
