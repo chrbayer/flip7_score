@@ -8,7 +8,7 @@
 - [x] Runden-Historie anzeigen (IMPLEMENTIERT)
 - [ ] Statistiken (Durchschnitt, höchste Runde, etc.)
 - [ ] Score-Limit konfigurierbar (nicht jeder spielt bis 200)
-- [ ] Haptisches Feedback bei Punkteeingabe und Undo
+- [x] Haptisches Feedback bei Punkteeingabe und Undo
 - [ ] Animationen für Runde-Wechsel und Gewinner
 
 ## UI/UX

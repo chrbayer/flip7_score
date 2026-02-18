@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/player.dart';
 import '../models/round.dart';
 import 'winner_screen.dart';
@@ -44,11 +45,15 @@ class _GameScreenState extends State<GameScreen> {
     final scoreText = _scoreController.text.trim();
     final score = scoreText.isEmpty ? 0 : int.tryParse(scoreText);
     if (score == null || score < 0) {
+      HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Bitte eine gültige Zahl eingeben')),
       );
       return;
     }
+
+    // Leichte Vibration bei erfolgreicher Eingabe
+    HapticFeedback.lightImpact();
 
     setState(() {
       widget.players[_selectedPlayerIndex!].lastRoundScore = score;
@@ -109,6 +114,9 @@ class _GameScreenState extends State<GameScreen> {
   void _undoLastScore(int index) {
     final player = widget.players[index];
     if (!player.hasEnteredScore) return;
+
+    // Mittlere Vibration bei Undo
+    HapticFeedback.mediumImpact();
 
     setState(() {
       player.undoLastScore();
