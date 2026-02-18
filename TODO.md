@@ -12,7 +12,7 @@
 - [ ] Animationen für Runde-Wechsel und Gewinner
 
 ## UI/UX
-- [ ] Dark Mode Support
+- [x] Dark Mode Support
 - [x] Tastatur-Shortcuts (Enter = absenden)
 - [x] UX-Hinweis bei Undo mit 0-Score (nicht nötig - grüner Haken zeigt Rückgang)
 
