@@ -4,9 +4,17 @@ import 'package:flip7_score/models/player.dart';
 import 'package:flip7_score/screens/game_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Hilfsfunktion: Phone-Größe setzen (verhindert Tablet-Layout)
+void setPhoneSize(WidgetTester tester) {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+}
+
 void main() {
   group('GameScreen Edge Cases', () {
     testWidgets('Negative Eingabe zeigt Fehler', (tester) async {
+      setPhoneSize(tester);
       final players = [Player(name: 'Alice'), Player(name: 'Bob')];
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
@@ -19,40 +27,34 @@ void main() {
     });
 
     testWidgets('Runde wird nicht gewechselt wenn nur ein Spieler fehlt', (tester) async {
+      setPhoneSize(tester);
       final players = [Player(name: 'Alice'), Player(name: 'Bob')];
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      // Alice gibt Punkte ein
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
 
-      // Runde sollte noch 1 sein (Bob fehlt noch)
       expect(find.text('Runde 1'), findsOneWidget);
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
     });
 
     testWidgets('Leere Scores werden korrekt behandelt', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
       final players = [Player(name: 'Alice'), Player(name: 'Bob')];
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      // Alice: leere Eingabe = 0
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
 
-      // Bob: 0
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
 
-      // Runde 2 sollte erreicht sein auch mit 0-Punkten
       expect(find.text('Runde 2'), findsOneWidget);
     });
   });
@@ -68,6 +70,7 @@ void main() {
     });
 
     testWidgets('zeigt Spielstand mit Runde 1', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
@@ -80,6 +83,7 @@ void main() {
     });
 
     testWidgets('erster Spieler ist ausgewählt', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
@@ -89,6 +93,7 @@ void main() {
     });
 
     testWidgets('Punkte können eingegeben werden', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
@@ -103,6 +108,7 @@ void main() {
     });
 
     testWidgets('leere Eingabe wird als 0 interpretiert', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
@@ -115,12 +121,12 @@ void main() {
     });
 
     testWidgets('Runde wechselt nach allen Spielern', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
       await tester.pumpAndSettle();
 
-      // Alice: 10 Punkte
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
@@ -128,18 +134,17 @@ void main() {
       expect(find.text('Runde 1'), findsOneWidget);
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
 
-      // Bob: 5 Punkte
       await tester.enterText(find.byType(TextField), '5');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
 
-      // Runde sollte jetzt 2 sein
       expect(find.text('Runde 2'), findsOneWidget);
       expect(find.text('Eingabe für: Alice'), findsOneWidget);
     });
 
     testWidgets('Spiel abbrechen Button vorhanden', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
@@ -149,6 +154,7 @@ void main() {
     });
 
     testWidgets('Check-Icon bei eingetragenem Spieler', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
@@ -162,6 +168,7 @@ void main() {
     });
 
     testWidgets('Ungültige Eingabe zeigt Fehler', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
@@ -175,6 +182,7 @@ void main() {
     });
 
     testWidgets('Abbrechen-Dialog zeigt Optionen', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
@@ -190,6 +198,7 @@ void main() {
     });
 
     testWidgets('Abbrechen-Dialog - Weiterspielen schließt Dialog', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
@@ -201,18 +210,14 @@ void main() {
       await tester.tap(find.text('Weiterspielen'));
       await tester.pumpAndSettle();
 
-      // Dialog sollte geschlossen sein, Spiel läuft weiter
       expect(find.text('Spiel abbrechen?'), findsNothing);
       expect(find.text('Runde 1'), findsOneWidget);
     });
 
     testWidgets('Gewinner bei 200 Punkten', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
-      // Spieler mit 195 Punkten starten
       final playersWithScore = [
         Player(name: 'Alice', score: 195),
         Player(name: 'Bob', score: 100),
@@ -223,24 +228,19 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Alice gibt 5 Punkte ein -> 200
       await tester.enterText(find.byType(TextField), '5');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 2));
 
-      // Sollte zum WinnerScreen navigieren
       expect(find.text('Gewinner!'), findsOneWidget);
       expect(find.text('Alice'), findsAtLeast(1));
     });
 
     testWidgets('Gewinner kann rückgängig gemacht werden und Spiel wird fortgesetzt', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
-      // Spieler mit 195 Punkten starten
       final playersWithScore = [
         Player(name: 'Alice', score: 195),
         Player(name: 'Bob', score: 100),
@@ -251,30 +251,23 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Alice gibt 5 Punkte ein -> 200 (Gewinn)
       await tester.enterText(find.byType(TextField), '5');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 2));
 
-      // Auf WinnerScreen
       expect(find.text('Gewinner!'), findsOneWidget);
 
-      // "Zurück zum Spiel" Button klicken
       await tester.tap(find.text('Zurück zum Spiel'));
       await tester.pumpAndSettle();
 
-      // Dialog öffnet sich
       expect(find.text('Gewinner rückgängig?'), findsOneWidget);
 
-      // Bestätigen
       await tester.tap(find.text('Zurück zum Spiel').last);
       await tester.pumpAndSettle();
 
-      // Zurück auf GameScreen - Runde 1, Alice hat wieder 195
       expect(find.text('Runde 1'), findsOneWidget);
       expect(find.text('195 Punkte'), findsOneWidget);
-      // Bob hat immer noch 100
       expect(find.text('100 Punkte'), findsOneWidget);
     });
   });
@@ -290,49 +283,44 @@ void main() {
     });
 
     testWidgets('Long-Press auf Spieler mit Score macht Undo', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
       await tester.pumpAndSettle();
 
-      // Alice: 10 Punkte
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
 
       expect(find.text('10 Punkte'), findsOneWidget);
 
-      // Long-Press auf Alice für Undo
       final aliceTile = find.text('Alice');
       await tester.longPress(aliceTile);
       await tester.pumpAndSettle();
 
-      // Score sollte zurückgesetzt sein
       expect(find.text('0 Punkte'), findsNWidgets(2));
       expect(find.text('Eingabe für: Alice'), findsOneWidget);
     });
 
     testWidgets('Long-Press auf Spieler ohne Score ändert nichts', (tester) async {
+      setPhoneSize(tester);
       await tester.pumpWidget(
         MaterialApp(home: GameScreen(players: players)),
       );
       await tester.pumpAndSettle();
 
-      // Alice gibt Punkte ein
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
 
-      // Alice hat jetzt 10 Punkte, Bob 0
       expect(find.text('10 Punkte'), findsOneWidget);
       expect(find.text('0 Punkte'), findsOneWidget);
 
-      // Bob hat noch keine Punkte (Long-Press sollte nichts tun)
       final bobTile = find.text('Bob');
       await tester.longPress(bobTile);
       await tester.pumpAndSettle();
 
-      // Scores sollten unverändert sein
       expect(find.text('10 Punkte'), findsOneWidget);
       expect(find.text('0 Punkte'), findsOneWidget);
     });
@@ -341,9 +329,7 @@ void main() {
   group('GameScreen Runde öffnen (Undo letzte Runde) mit mehr Spielern', () {
     testWidgets('Runde-Undo mit 3 Spielern funktioniert korrekt', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
       final players = [
         Player(name: 'Alice'),
@@ -354,7 +340,6 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      // Runde 1: Alice 10, Bob 5, Charlie 3
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
@@ -370,26 +355,21 @@ void main() {
 
       expect(find.text('Runde 2'), findsOneWidget);
 
-      // Long-Press auf "Runde 2" → Runde 1 öffnen
       await tester.longPress(find.text('Runde 2'));
       await tester.pumpAndSettle();
 
       expect(find.text('Runde 1'), findsOneWidget);
 
-      // Alice und Bob haben Score, Charlie nicht (letzter Spieler)
       expect(find.text('10 Punkte'), findsOneWidget);
       expect(find.text('5 Punkte'), findsOneWidget);
       expect(find.text('0 Punkte'), findsOneWidget);
 
-      // Charlie ist ausgewählt
       expect(find.text('Eingabe für: Charlie'), findsOneWidget);
     });
 
     testWidgets('Runde-Undo mit laufender Runde bei 3 Spielern', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
       final players = [
         Player(name: 'Alice'),
@@ -400,7 +380,6 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      // Runde 1: Alice 10, Bob 5, Charlie 3
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
@@ -414,43 +393,34 @@ void main() {
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
 
-      // Runde 2: Alice gibt 7 ein
       await tester.enterText(find.byType(TextField), '7');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
 
-      expect(find.text('17 Punkte'), findsOneWidget); // Alice: 10 + 7
+      expect(find.text('17 Punkte'), findsOneWidget);
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
 
-      // Long-Press auf "Runde 2" → Runde 1 öffnen
       await tester.longPress(find.text('Runde 2'));
       await tester.pumpAndSettle();
 
       expect(find.text('Runde 1'), findsOneWidget);
-
-      // Alice und Bob haben Score, Charlie nicht
       expect(find.text('10 Punkte'), findsOneWidget);
       expect(find.text('5 Punkte'), findsOneWidget);
       expect(find.text('0 Punkte'), findsOneWidget);
 
-      // Charlie schließt Runde 1 ab
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.controller!.text, '3');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
 
-      // Runde 2 wiederhergestellt
       expect(find.text('Runde 2'), findsOneWidget);
-      // Alice: 10 + 7 = 17
       expect(find.text('17 Punkte'), findsOneWidget);
     });
 
     testWidgets('Mehrfaches Runde-Undo (2 Runden zurück)', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
       final players = [
         Player(name: 'Alice'),
@@ -460,7 +430,6 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      // Runde 1: Alice 10, Bob 5
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
@@ -470,7 +439,6 @@ void main() {
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
 
-      // Runde 2: Alice 8, Bob 3
       await tester.enterText(find.byType(TextField), '8');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
@@ -482,20 +450,16 @@ void main() {
 
       expect(find.text('Runde 3'), findsOneWidget);
 
-      // Long-Press auf "Runde 3" → Runde 2 öffnen
       await tester.longPress(find.text('Runde 3'));
       await tester.pumpAndSettle();
 
       expect(find.text('Runde 2'), findsOneWidget);
 
-      // Nochmal Long-Press → Runde 1 öffnen
       await tester.longPress(find.text('Runde 2'));
       await tester.pumpAndSettle();
 
       expect(find.text('Runde 1'), findsOneWidget);
 
-      // Bob (letzter Spieler in Runde 1) hat Score 0
-      // Alice (erster Spieler) behält ihren Score in Runde 1
       expect(find.text('10 Punkte'), findsOneWidget);
       expect(find.text('0 Punkte'), findsOneWidget);
     });
@@ -504,9 +468,7 @@ void main() {
   group('GameScreen Runde öffnen (Undo letzte Runde)', () {
     testWidgets('Long-Press auf Runden-Label öffnet letzte Runde', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
       final players = [
         Player(name: 'Alice'),
@@ -516,7 +478,6 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      // Runde 1 abschließen: Alice 10, Bob 5
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
@@ -528,20 +489,13 @@ void main() {
 
       expect(find.text('Runde 2'), findsOneWidget);
 
-      // Long-Press auf "Runde 2" → Runde 1 wird wieder geöffnet
       await tester.longPress(find.text('Runde 2'));
       await tester.pumpAndSettle();
 
-      // Sollte wieder Runde 1 zeigen
       expect(find.text('Runde 1'), findsOneWidget);
-
-      // Alice hat noch 10 Punkte (hasEnteredScore = true)
       expect(find.text('10 Punkte'), findsOneWidget);
-
-      // Bobs Score (letzter Spieler) wurde zurückgesetzt auf 0
       expect(find.text('0 Punkte'), findsOneWidget);
 
-      // Bob ist ausgewählt (letzter Eingeber), mit Vorbelegung "5"
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.controller!.text, '5');
@@ -549,9 +503,7 @@ void main() {
 
     testWidgets('Laufende Runde wird gesichert und nach Wiederschließen wiederhergestellt', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
       final players = [
         Player(name: 'Alice'),
@@ -561,7 +513,6 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      // Runde 1: Alice 10, Bob 5
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
@@ -573,38 +524,32 @@ void main() {
 
       expect(find.text('Runde 2'), findsOneWidget);
 
-      // Runde 2: Alice gibt 20 ein (Bob noch nicht)
       await tester.enterText(find.byType(TextField), '20');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
 
-      expect(find.text('30 Punkte'), findsOneWidget); // Alice: 10 + 20
+      expect(find.text('30 Punkte'), findsOneWidget);
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
 
-      // Long-Press auf "Runde 2" → Runde 1 öffnen
       await tester.longPress(find.text('Runde 2'));
       await tester.pumpAndSettle();
 
       expect(find.text('Runde 1'), findsOneWidget);
-      // Alices Score: 10 + 20 (Runde 1 intakt) - 20 (Runde-2-Eintrag rückgängig) = 10
       expect(find.text('10 Punkte'), findsOneWidget);
 
-      // Bob schließt Runde 1 ab (Vorbelegung 5)
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.controller!.text, '5');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
 
-      // Runde 2 ist jetzt wieder offen
       expect(find.text('Runde 2'), findsOneWidget);
-      // Alice hat ihren Runde-2-Eintrag wiederhergestellt: 10 + 20 = 30
       expect(find.text('30 Punkte'), findsOneWidget);
-      // Bob ist wieder dran
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
     });
 
     testWidgets('Runde 1 kann nicht per Long-Press geöffnet werden', (tester) async {
+      setPhoneSize(tester);
       final players = [
         Player(name: 'Alice'),
         Player(name: 'Bob'),
@@ -613,7 +558,6 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      // Wir sind in Runde 1 – Long-Press sollte nichts tun
       await tester.longPress(find.text('Runde 1'));
       await tester.pumpAndSettle();
 
@@ -623,9 +567,7 @@ void main() {
 
   group('GameScreen Runden-Historie', () {
     testWidgets('Runden-Historie erscheint nach Runde 1', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
       final players = [
         Player(name: 'Alice'),
@@ -637,7 +579,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Runde 1: Alice 10, Bob 5
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
@@ -646,15 +587,12 @@ void main() {
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
 
-      // Historie sollte sichtbar sein
       expect(find.text('Runden (1)'), findsOneWidget);
       expect(find.byIcon(Icons.history), findsOneWidget);
     });
 
     testWidgets('Runden-Historie zeigt Scores nach Ausklappen', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+      setPhoneSize(tester);
 
       final players = [
         Player(name: 'Alice'),
@@ -666,7 +604,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Runde 1: Alice 10, Bob 5
       await tester.enterText(find.byType(TextField), '10');
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
@@ -675,11 +612,9 @@ void main() {
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
 
-      // Ausklappen
       await tester.tap(find.text('Runden (1)'));
       await tester.pumpAndSettle();
 
-      // Runde 1 sollte angezeigt werden
       expect(find.text('Runde 1'), findsAtLeast(1));
     });
   });

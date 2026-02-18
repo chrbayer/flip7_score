@@ -36,7 +36,8 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Navigation**: Navigator mit anonymen Routes (MaterialPageRoute)
 - **Persistenz**: shared_preferences
 - **Design**: Material Design 3
-- **Tests**: 61 Unit- und Widget-Tests
+- **Responsive Layout**: Optimiert für Tablets (≥600dp) mit 2-Spalten-Layout
+- **Tests**: 65 Unit- und Widget-Tests
 
 ## Farbschema
 

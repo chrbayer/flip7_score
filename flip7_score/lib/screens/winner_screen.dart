@@ -21,6 +21,8 @@ class WinnerScreen extends StatefulWidget {
 class _WinnerScreenState extends State<WinnerScreen> {
   late ConfettiController _confettiController;
 
+  bool get _isTablet => MediaQuery.of(context).size.width >= 600;
+
   @override
   void initState() {
     super.initState();
@@ -208,32 +210,78 @@ class _WinnerScreenState extends State<WinnerScreen> {
     final sortedPlayers = List<Player>.from(widget.allPlayers)
       ..sort((a, b) => b.score.compareTo(a.score));
 
+    if (_isTablet) {
+      // Tablet: 2-Spalten-Layout mit GridView
+      return [
+        SizedBox(
+          height: sortedPlayers.length * 40.0,
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 4,
+            ),
+            itemCount: sortedPlayers.length,
+            itemBuilder: (context, index) {
+              return _buildRankingTile(sortedPlayers[index], index == 0);
+            },
+          ),
+        ),
+      ];
+    }
+
     return sortedPlayers.asMap().entries.map((entry) {
       final index = entry.key;
       final player = entry.value;
-      final isWinner = index == 0;
-
-      return ListTile(
-        leading: Icon(
-          isWinner ? Icons.emoji_events : Icons.person,
-          color: isWinner ? const Color(0xFFFFD700) : null,
-        ),
-        title: Text(
-          player.name,
-          style: TextStyle(
-            fontWeight: isWinner ? FontWeight.bold : FontWeight.normal,
-            fontSize: 16,
-          ),
-        ),
-        trailing: Text(
-          '${player.score}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: isWinner ? const Color(0xFFFFD700) : null,
-          ),
-        ),
-      );
+      return _buildRankingTile(player, index == 0);
     }).toList();
+  }
+
+  Widget _buildRankingTile(Player player, bool isWinner) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: isWinner
+          ? BoxDecoration(
+              color: const Color(0xFFFFD700).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            )
+          : null,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isWinner ? Icons.emoji_events : Icons.person,
+                color: isWinner ? const Color(0xFFFFD700) : null,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  player.name,
+                  style: TextStyle(
+                    fontWeight: isWinner ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 14,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            '${player.score}',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: isWinner ? const Color(0xFFFFD700) : null,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

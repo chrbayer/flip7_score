@@ -98,6 +98,7 @@
 - Übersichtliche Tabellenansicht der Spielstände
 - Große, gut lesbare Schrift
 - Kein Zurück-Button auf beiden Bildschirmen (Startbildschirm ist erster Screen, Spielbildschirm wird abgebrochen über Schaltfläche)
+- **Responsive Layout**: Optimiert für Tablets (≥600dp) mit 2-Spalten-Grid für Spielerlisten und nebeneinander angeordneten Eingabeelementen
 
 ## 4. Technische Umsetzung
 

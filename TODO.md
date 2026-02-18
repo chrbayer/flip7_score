@@ -11,7 +11,7 @@
 - [x] Tests (61 Unit- und Widget-Tests)
 
 ## UI/UX
-- [ ] Tablet-Layout für größere Bildschirme optimieren
+- [x] Tablet-Layout für größere Bildschirme optimieren
 - [x] Rückkehr vom Gewinner-Bildschirm zum Spielstand ermöglichen (z.B. bei versehentlicher Gewinner-Auslösung)
 - [ ] Drag-and-drop zur Spieler-Reihenfolge im StartScreen
 

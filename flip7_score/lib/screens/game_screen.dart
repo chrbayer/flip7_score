@@ -32,6 +32,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late Animation<double> _scoreScaleAnimation;
   String? _lastAnimatedPlayer;
 
+  bool get _isTablet => MediaQuery.of(context).size.width >= 600;
+
   @override
   void initState() {
     super.initState();
@@ -509,60 +511,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Card(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      onLongPress: _currentRound > 1 ? _undoLastRound : null,
-                      child: AnimatedBuilder(
-                        animation: _roundScaleAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _roundScaleAnimation.value,
-                            child: child,
-                          );
-                        },
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Runde $_currentRound',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (_currentRound > 1) ...[
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.undo,
-                                size: 20,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (_selectedPlayerIndex != null)
-                      Text(
-                        'Eingabe für: ${widget.players[_selectedPlayerIndex!].name}',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            // Runden-Historie (ausklappbar)
-            if (_roundHistory.isNotEmpty) ...[
+            if (_isTablet)
+              _buildTabletHeader()
+            else
+              _buildPhoneHeader(),
+            // Runden-Historie (ausklappbar) - nur im Phone-Modus, im Tablet ist sie im Header
+            if (!_isTablet && _roundHistory.isNotEmpty) ...[
               const SizedBox(height: 8),
               Card(
                 child: ExpansionTile(
@@ -598,105 +552,324 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               ),
             ],
             const SizedBox(height: 16),
-            TextField(
-              controller: _scoreController,
-              focusNode: _scoreFocusNode,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Punkte eingeben',
-                hintText: '0',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.add_circle_outline),
+            if (_isTablet) ...[
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(child: _buildScoreInput()),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildPlayerList()),
+                  ],
+                ),
               ),
-              onSubmitted: (_) => _submitScore(),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _submitScore,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            ] else ...[
+              _buildScoreInput(),
+              const SizedBox(height: 24),
+              const Text(
+                'Spielstände',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              child: const Text('Punkte eintragen', style: TextStyle(fontSize: 18)),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Spielstände',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Card(
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: widget.players.length,
-                  separatorBuilder: (context, index) => const Divider(),
-                  itemBuilder: (context, index) {
-                    final player = widget.players[index];
-                    final isSelected = index == _selectedPlayerIndex;
-                    final hasEntered = player.hasEnteredScore;
+              const SizedBox(height: 8),
+              Expanded(child: _buildPlayerList()),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
-                    return InkWell(
-                      onTap: () => _selectPlayer(index),
-                      onLongPress: hasEntered ? () => _undoLastScore(index) : null,
-                      child: Container(
-                        color: hasEntered
-                            ? Colors.green.withValues(alpha: 0.1)
-                            : isSelected
-                                ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
-                                : null,
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: hasEntered
-                                ? Colors.green
-                                : isSelected
-                                    ? Theme.of(context).colorScheme.secondary
-                                    : Theme.of(context).colorScheme.primary,
-                            child: hasEntered
-                                ? const Icon(Icons.check, color: Colors.white, size: 20)
-                                : Text(
-                                    '${index + 1}',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                          ),
-                          title: Text(
-                            player.name,
-                            style: TextStyle(
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              fontSize: 18,
-                              color: hasEntered ? Colors.green[700] : null,
-                            ),
-                          ),
-                          trailing: AnimatedBuilder(
-                            animation: _scoreScaleAnimation,
-                            builder: (context, child) {
-                              final shouldAnimate = _lastAnimatedPlayer == player.name;
-                              return Transform.scale(
-                                scale: shouldAnimate ? _scoreScaleAnimation.value : 1.0,
-                                child: child,
-                              );
-                            },
-                            child: Text(
-                              '${player.score} Punkte',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: player.score >= widget.scoreLimit
-                                    ? Colors.green
-                                    : Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                        ),
+  Widget _buildTabletHeader() {
+    return Row(
+      children: [
+        Expanded(child: _buildRoundCard()),
+        const SizedBox(width: 16),
+        Expanded(child: _buildHistoryCard()),
+      ],
+    );
+  }
+
+  Widget _buildPhoneHeader() {
+    return Column(children: [_buildRoundCard()]);
+  }
+
+  Widget _buildRoundCard() {
+    return Card(
+      color: Theme.of(context).colorScheme.primaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            GestureDetector(
+              onLongPress: _currentRound > 1 ? _undoLastRound : null,
+              child: AnimatedBuilder(
+                animation: _roundScaleAnimation,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _roundScaleAnimation.value,
+                    child: child,
+                  );
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Runde $_currentRound',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  },
+                    ),
+                    if (_currentRound > 1) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.undo,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            if (_selectedPlayerIndex != null)
+              Text(
+                'Eingabe für: ${widget.players[_selectedPlayerIndex!].name}',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryCard() {
+    if (_roundHistory.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Card(
+      child: ExpansionTile(
+        leading: const Icon(Icons.history),
+        title: Text('Runden (${_roundHistory.length})'),
+        trailing: Icon(
+          _historyExpanded ? Icons.expand_less : Icons.expand_more,
+        ),
+        onExpansionChanged: (expanded) {
+          setState(() {
+            _historyExpanded = expanded;
+          });
+        },
+        children: [
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _roundHistory.length,
+            itemBuilder: (context, index) {
+              final round = _roundHistory[index];
+              final scoresText = round.playerScores.entries
+                  .map((e) => '${e.key}: +${e.value}')
+                  .join(', ');
+              return ListTile(
+                dense: true,
+                title: Text('Runde ${round.roundNumber}'),
+                subtitle: Text(scoresText),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: _scoreController,
+          focusNode: _scoreFocusNode,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Punkte eingeben',
+            hintText: '0',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.add_circle_outline),
+          ),
+          onSubmitted: (_) => _submitScore(),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _submitScore,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
+          child: const Text('Punkte eintragen', style: TextStyle(fontSize: 18)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlayerList() {
+    if (_isTablet) {
+      return Card(
+        child: GridView.builder(
+          padding: const EdgeInsets.all(8),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 4.0,
+          ),
+          itemCount: widget.players.length,
+          itemBuilder: (context, index) {
+            return _buildPlayerTile(index);
+          },
+        ),
+      );
+    }
+
+    return Card(
+      child: ListView.separated(
+        padding: const EdgeInsets.all(8),
+        itemCount: widget.players.length,
+        separatorBuilder: (context, index) => const Divider(),
+        itemBuilder: (context, index) {
+          return _buildPlayerTile(index);
+        },
+      ),
+    );
+  }
+
+  Widget _buildPlayerTile(int index) {
+    final player = widget.players[index];
+    final isSelected = index == _selectedPlayerIndex;
+    final hasEntered = player.hasEnteredScore;
+
+    if (_isTablet) {
+      // Tablet: kompaktes Row-Layout
+      return InkWell(
+        onTap: () => _selectPlayer(index),
+        onLongPress: hasEntered ? () => _undoLastScore(index) : null,
+        child: Container(
+          color: hasEntered
+              ? Colors.green.withValues(alpha: 0.1)
+              : isSelected
+                  ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                  : null,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 12,
+                backgroundColor: hasEntered
+                    ? Colors.green
+                    : isSelected
+                        ? Theme.of(context).colorScheme.secondary
+                        : Theme.of(context).colorScheme.primary,
+                child: hasEntered
+                    ? const Icon(Icons.check, color: Colors.white, size: 12)
+                    : Text(
+                        '${index + 1}',
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                      ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  player.name,
+                  style: TextStyle(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 12,
+                    color: hasEntered ? Colors.green[700] : null,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              AnimatedBuilder(
+                animation: _scoreScaleAnimation,
+                builder: (context, child) {
+                  final shouldAnimate = _lastAnimatedPlayer == player.name;
+                  return Transform.scale(
+                    scale: shouldAnimate ? _scoreScaleAnimation.value : 1.0,
+                    child: child,
+                  );
+                },
+                child: Text(
+                  '${player.score}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: player.score >= widget.scoreLimit
+                        ? Colors.green
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Phone: ListTile-Layout (für Tests kompatibel)
+    return InkWell(
+      onTap: () => _selectPlayer(index),
+      onLongPress: hasEntered ? () => _undoLastScore(index) : null,
+      child: Container(
+        color: hasEntered
+            ? Colors.green.withValues(alpha: 0.1)
+            : isSelected
+                ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                : null,
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: hasEntered
+                ? Colors.green
+                : isSelected
+                    ? Theme.of(context).colorScheme.secondary
+                    : Theme.of(context).colorScheme.primary,
+            child: hasEntered
+                ? const Icon(Icons.check, color: Colors.white, size: 20)
+                : Text(
+                    '${index + 1}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+          ),
+          title: Text(
+            player.name,
+            style: TextStyle(
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 18,
+              color: hasEntered ? Colors.green[700] : null,
+            ),
+          ),
+          trailing: AnimatedBuilder(
+            animation: _scoreScaleAnimation,
+            builder: (context, child) {
+              final shouldAnimate = _lastAnimatedPlayer == player.name;
+              return Transform.scale(
+                scale: shouldAnimate ? _scoreScaleAnimation.value : 1.0,
+                child: child,
+              );
+            },
+            child: Text(
+              '${player.score} Punkte',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: player.score >= widget.scoreLimit
+                    ? Colors.green
+                    : Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
         ),
       ),
     );

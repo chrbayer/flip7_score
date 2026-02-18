@@ -24,6 +24,8 @@ class _StartScreenState extends State<StartScreen> {
   final List<Player> _players = [];
   List<String> _recentNames = [];
 
+  bool get _isTablet => MediaQuery.of(context).size.width >= 600;
+
   @override
   void initState() {
     super.initState();
@@ -268,128 +270,70 @@ class _StartScreenState extends State<StartScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: _isTablet ? _buildTabletLayout() : _buildPhoneLayout(),
+      ),
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Anzahl der Mitspieler',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Expanded(child: _buildPlayerCountSelector()),
+            const SizedBox(width: 24),
+            Expanded(child: _buildScoreLimitSelector()),
+          ],
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Spielernamen',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 3,
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: _playerCount > 2
-                      ? () => _updatePlayerCount(_playerCount - 1)
-                      : null,
-                  icon: const Icon(Icons.remove_circle),
-                  iconSize: 36,
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: Theme.of(context).colorScheme.primary),
-                    borderRadius: BorderRadius.circular(8),
+            itemCount: _playerCount,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: TextField(
+                  controller: _nameControllers[index],
+                  focusNode: _nameFocusNodes[index],
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: 'Spieler ${index + 1}',
+                    border: const OutlineInputBorder(),
                   ),
-                  child: Text(
-                    '$_playerCount',
-                    style: const TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
+                  onSubmitted: (_) {
+                    if (index < _playerCount - 1) {
+                      _nameFocusNodes[index + 1].requestFocus();
+                    }
+                  },
                 ),
-                IconButton(
-                  onPressed: _playerCount < 6
-                      ? () => _updatePlayerCount(_playerCount + 1)
-                      : null,
-                  icon: const Icon(Icons.add_circle),
-                  iconSize: 36,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Gewinn-Limit (Punkte)',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: _scoreLimit > 50
-                      ? () => setState(() => _scoreLimit -= 50)
-                      : null,
-                  icon: const Icon(Icons.remove_circle),
-                  iconSize: 36,
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: Theme.of(context).colorScheme.primary),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '$_scoreLimit',
-                    style: const TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _scoreLimit < 500
-                      ? () => setState(() => _scoreLimit += 50)
-                      : null,
-                  icon: const Icon(Icons.add_circle),
-                  iconSize: 36,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Spielernamen',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _playerCount,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: TextField(
-                      controller: _nameControllers[index],
-                      focusNode: _nameFocusNodes[index],
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(
-                        labelText: 'Spieler ${index + 1}',
-                        border: const OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) {
-                        if (index < _playerCount - 1) {
-                          // Zum nächsten Eingabefeld
-                          _nameFocusNodes[index + 1].requestFocus();
-                        }
-                        // Bei letztem Spieler: kein Fokus setzen
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
+              );
+            },
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
             ElevatedButton(
               onPressed: _startGame,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
               ),
               child: const Text('Spiel starten', style: TextStyle(fontSize: 18)),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(width: 16),
             TextButton.icon(
               onPressed: () => _showStatsDialog(context),
               icon: const Icon(Icons.bar_chart),
@@ -397,7 +341,232 @@ class _StartScreenState extends State<StartScreen> {
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _buildPhoneLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Anzahl der Mitspieler',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: _playerCount > 2
+                  ? () => _updatePlayerCount(_playerCount - 1)
+                  : null,
+              icon: const Icon(Icons.remove_circle),
+              iconSize: 36,
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.primary),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$_playerCount',
+                style: const TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+            IconButton(
+              onPressed: _playerCount < 6
+                  ? () => _updatePlayerCount(_playerCount + 1)
+                  : null,
+              icon: const Icon(Icons.add_circle),
+              iconSize: 36,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Gewinn-Limit (Punkte)',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: _scoreLimit > 50
+                  ? () => setState(() => _scoreLimit -= 50)
+                  : null,
+              icon: const Icon(Icons.remove_circle),
+              iconSize: 36,
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.primary),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$_scoreLimit',
+                style: const TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+            IconButton(
+              onPressed: _scoreLimit < 500
+                  ? () => setState(() => _scoreLimit += 50)
+                  : null,
+              icon: const Icon(Icons.add_circle),
+              iconSize: 36,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Spielernamen',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _playerCount,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: TextField(
+                  controller: _nameControllers[index],
+                  focusNode: _nameFocusNodes[index],
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: 'Spieler ${index + 1}',
+                    border: const OutlineInputBorder(),
+                  ),
+                  onSubmitted: (_) {
+                    if (index < _playerCount - 1) {
+                      // Zum nächsten Eingabefeld
+                      _nameFocusNodes[index + 1].requestFocus();
+                    }
+                    // Bei letztem Spieler: kein Fokus setzen
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _startGame,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
+          child: const Text('Spiel starten', style: TextStyle(fontSize: 18)),
+        ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: () => _showStatsDialog(context),
+          icon: const Icon(Icons.bar_chart),
+          label: const Text('Statistiken'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlayerCountSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Anzahl der Mitspieler',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: _playerCount > 2
+                  ? () => _updatePlayerCount(_playerCount - 1)
+                  : null,
+              icon: const Icon(Icons.remove_circle),
+              iconSize: 36,
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.primary),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$_playerCount',
+                style: const TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+            IconButton(
+              onPressed: _playerCount < 6
+                  ? () => _updatePlayerCount(_playerCount + 1)
+                  : null,
+              icon: const Icon(Icons.add_circle),
+              iconSize: 36,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScoreLimitSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Gewinn-Limit (Punkte)',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: _scoreLimit > 50
+                  ? () => setState(() => _scoreLimit -= 50)
+                  : null,
+              icon: const Icon(Icons.remove_circle),
+              iconSize: 36,
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.primary),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$_scoreLimit',
+                style: const TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+            IconButton(
+              onPressed: _scoreLimit < 500
+                  ? () => setState(() => _scoreLimit += 50)
+                  : null,
+              icon: const Icon(Icons.add_circle),
+              iconSize: 36,
+            ),
+          ],
+        ),
+      ],
     );
   }
 

@@ -17,7 +17,7 @@ void main() {
     });
 
     testWidgets('zeigt Gewinner mit Namen und Punkten', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -38,7 +38,7 @@ void main() {
     });
 
     testWidgets('zeigt Endstand sortiert nach Punkten', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -54,13 +54,14 @@ void main() {
 
       expect(find.text('Endstand'), findsOneWidget);
 
-      // 3 ListTiles für die Rangliste
-      final rankings = find.byType(ListTile);
-      expect(rankings, findsNWidgets(3));
+      // Alle 3 Spielernamen in der Rangliste sichtbar
+      expect(find.text('Alice'), findsAtLeast(1));
+      expect(find.text('Bob'), findsOneWidget);
+      expect(find.text('Charlie'), findsOneWidget);
     });
 
     testWidgets('Buttons für neue Partie vorhanden', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -79,7 +80,7 @@ void main() {
     });
 
     testWidgets('Gewinner-Icon wird angezeigt', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -98,7 +99,7 @@ void main() {
     });
 
     testWidgets('AppBar zeigt Gewinner', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -116,7 +117,7 @@ void main() {
     });
 
     testWidgets('Zurück-zum-Spiel Button und Bestätigungsdialog vorhanden', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -142,7 +143,7 @@ void main() {
     });
 
     testWidgets('Abbrechen im Dialog schließt Dialog ohne Navigation', (tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -169,7 +170,7 @@ void main() {
 
     testWidgets('Bestätigen im Dialog navigiert zurück', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
