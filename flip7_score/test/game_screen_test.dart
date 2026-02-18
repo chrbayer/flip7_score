@@ -233,6 +233,50 @@ void main() {
       expect(find.text('Gewinner!'), findsOneWidget);
       expect(find.text('Alice'), findsAtLeast(1));
     });
+
+    testWidgets('Gewinner kann rückgängig gemacht werden und Spiel wird fortgesetzt', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      // Spieler mit 195 Punkten starten
+      final playersWithScore = [
+        Player(name: 'Alice', score: 195),
+        Player(name: 'Bob', score: 100),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(home: GameScreen(players: playersWithScore)),
+      );
+      await tester.pumpAndSettle();
+
+      // Alice gibt 5 Punkte ein -> 200 (Gewinn)
+      await tester.enterText(find.byType(TextField), '5');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+
+      // Auf WinnerScreen
+      expect(find.text('Gewinner!'), findsOneWidget);
+
+      // "Zurück zum Spiel" Button klicken
+      await tester.tap(find.text('Zurück zum Spiel'));
+      await tester.pumpAndSettle();
+
+      // Dialog öffnet sich
+      expect(find.text('Gewinner rückgängig?'), findsOneWidget);
+
+      // Bestätigen
+      await tester.tap(find.text('Zurück zum Spiel').last);
+      await tester.pumpAndSettle();
+
+      // Zurück auf GameScreen - Runde 1, Alice hat wieder 195
+      expect(find.text('Runde 1'), findsOneWidget);
+      expect(find.text('195 Punkte'), findsOneWidget);
+      // Bob hat immer noch 100
+      expect(find.text('100 Punkte'), findsOneWidget);
+    });
   });
 
   group('GameScreen Undo', () {

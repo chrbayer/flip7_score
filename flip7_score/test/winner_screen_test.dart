@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flip7_score/models/player.dart';
 import 'package:flip7_score/screens/winner_screen.dart';
 
@@ -112,6 +113,87 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Gewinner!'), findsOneWidget);
+    });
+
+    testWidgets('Zurück-zum-Spiel Button und Bestätigungsdialog vorhanden', (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WinnerScreen(
+            winner: players[0],
+            allPlayers: players,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Zurück zum Spiel'), findsOneWidget);
+      expect(find.byIcon(Icons.undo), findsOneWidget);
+
+      // Antippen öffnet Bestätigungsdialog
+      await tester.tap(find.text('Zurück zum Spiel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Gewinner rückgängig?'), findsOneWidget);
+      expect(find.text('Abbrechen'), findsOneWidget);
+    });
+
+    testWidgets('Abbrechen im Dialog schließt Dialog ohne Navigation', (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WinnerScreen(
+            winner: players[0],
+            allPlayers: players,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Zurück zum Spiel'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Abbrechen'));
+      await tester.pumpAndSettle();
+
+      // Dialog geschlossen, WinnerScreen noch sichtbar
+      expect(find.text('Gewinner rückgängig?'), findsNothing);
+      expect(find.text('GEWINNER'), findsOneWidget);
+    });
+
+    testWidgets('Bestätigen im Dialog navigiert zurück', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WinnerScreen(
+            winner: players[0],
+            allPlayers: players,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Dialog öffnen
+      await tester.tap(find.text('Zurück zum Spiel'));
+      await tester.pumpAndSettle();
+
+      // Bestätigen
+      await tester.tap(find.text('Zurück zum Spiel').last);
+      await tester.pumpAndSettle();
+
+      // Sollte vom WinnerScreen zurück navigieren
+      // (Der Navigator.pop mit true wird ausgeführt)
+      expect(find.text('GEWINNER'), findsNothing);
     });
   });
 }
