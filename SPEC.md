@@ -26,7 +26,7 @@
 - Farbliche Markierung (grün) zeigt Spieler mit bereits eingetragenem Score
 - Automatischer Runde-Wechsel sobald alle Spieler einen Score haben
 - **Undo (einzelner Spieler)**: Langer Druck auf einen bereits eingetragenen Spieler macht dessen letzten Score rückgängig
-- **Undo (Runde)**: Langer Druck auf die Runde-Zahl macht die letzte abgeschlossene Runde rückgängig
+- **Undo (Runde)**: Langer Druck auf die Runde-Zahl (mit Undo-Icon) macht die letzte abgeschlossene Runde rückgängig
 - **Unterbrochene Runde wiederherstellen**: Beim Rückgängig-Machen einer Runde werden bereits in der aktuellen Runde eingegebene Scores gespeichert und beim nächsten Runde-Wechsel automatisch wiederhergestellt
 
 ### 2.3 Gewinnbedingung
@@ -34,6 +34,7 @@
 - Gewinner-Anzeige mit Namen und Punktestand
 - Option für neue Partie mit gleichen oder neuen Spielern
 - Animation bei Erreichen des Gewinnerstatus
+- **Rückkehr zum Spiel**: "Zurück zum Spiel"-Button mit Bestätigungsdialog ermöglicht das Fortsetzen des Spiels bei versehentlicher Gewinner-Auslösung
 
 ### 2.4 Spiel abbrechen
 - Button zum Abbrechen des laufenden Spiels

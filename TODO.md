@@ -1,20 +1,23 @@
 # Flip7 Score - Todo / Improvements
 
-## Tests (offen)
-- [x] Undo Long-Press Widget-Test
-- [x] Weitere Edge-Cases für Deduplizierung
-
 ## Features
 - [x] Runden-Historie anzeigen (IMPLEMENTIERT)
 - [x] Statistiken (Durchschnitt, höchste Runde, etc.)
 - [x] Score-Limit konfigurierbar (nicht jeder spielt bis 200)
 - [x] Haptisches Feedback bei Punkteeingabe und Undo
 - [x] Animationen für Runde-Wechsel und Gewinner
+- [x] Undo für komplette Runde (Long-Press auf Runde-Zahl mit Undo-Icon)
+- [x] Unterbrochene Runde wiederherstellen nach Runde-Undo
+- [x] Tests (61 Unit- und Widget-Tests)
 
 ## UI/UX
-- [x] Dark Mode Support
-- [x] Tastatur-Shortcuts (Enter = absenden)
-- [x] UX-Hinweis bei Undo mit 0-Score (nicht nötig - grüner Haken zeigt Rückgang)
+- [ ] Tablet-Layout für größere Bildschirme optimieren
+- [x] Rückkehr vom Gewinner-Bildschirm zum Spielstand ermöglichen (z.B. bei versehentlicher Gewinner-Auslösung)
+- [ ] Drag-and-drop zur Spieler-Reihenfolge im StartScreen
+
+## Statistiken erweitern
+- [ ] Siege pro Spieler tracken (gamesWon) und Siegesquote anzeigen (gamesWon / gamesPlayed)
+- [ ] Durchschnittlicher Score pro Runde pro Spieler anzeigen
 
 ## Technisch
 - [x] Fehlerbehandlung bei SharedPreferences

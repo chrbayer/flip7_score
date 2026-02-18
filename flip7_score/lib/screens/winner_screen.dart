@@ -50,6 +50,31 @@ class _WinnerScreenState extends State<WinnerScreen> {
     );
   }
 
+  void _confirmUndoWinner(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Gewinner rückgängig?'),
+        content: Text(
+          'Der letzte eingegebene Score von ${widget.winner.name} wird zurückgesetzt und das Spiel fortgesetzt.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Dialog schließen
+              Navigator.pop(context, true); // WinnerScreen mit Ergebnis verlassen
+            },
+            child: const Text('Zurück zum Spiel'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _startNewGame(BuildContext context) {
     Navigator.pushAndRemoveUntil(
       context,
@@ -142,6 +167,15 @@ class _WinnerScreenState extends State<WinnerScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text('Neue Spieler auswählen', style: TextStyle(fontSize: 16)),
+                ),
+                const SizedBox(height: 24),
+                TextButton.icon(
+                  onPressed: () => _confirmUndoWinner(context),
+                  icon: const Icon(Icons.undo),
+                  label: const Text('Zurück zum Spiel'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.grey,
+                  ),
                 ),
               ],
             ),

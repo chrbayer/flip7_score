@@ -363,11 +363,27 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   void _showWinnerDialog() async {
     final winner = widget.players[_selectedPlayerIndex!];
+    final winnerLastScore = winner.lastRoundScore;
+
+    // Aktuelle (evtl. unvollständige) Runde speichern – nicht eingegebene Spieler zählen mit 0
+    final roundScores = <String, int>{};
+    for (var player in widget.players) {
+      roundScores[player.name] = player.lastRoundScore;
+    }
+    final winningRound = Round(
+      roundNumber: _currentRound,
+      playerScores: roundScores,
+      lastPlayerIndex: _selectedPlayerIndex!,
+    );
+    _roundHistory.add(winningRound);
+    await _updateRoundStats(winningRound);
 
     // Spielzähler aktualisieren
     await _updateGameStats();
 
-    Navigator.pushReplacement(
+    if (!mounted) return;
+
+    final undone = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => WinnerScreen(
@@ -376,6 +392,35 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         ),
       ),
     );
+
+    if (undone == true && mounted) {
+      _roundHistory.removeLast();
+      await _undoRoundStats(winningRound);
+      await _undoGameStats();
+      winner.score -= winnerLastScore;
+      winner.hasEnteredScore = false;
+      setState(() {
+        _selectedPlayerIndex = widget.players.indexOf(winner);
+        _scoreController.text = winnerLastScore > 0 ? winnerLastScore.toString() : '';
+        _lastAnimatedPlayer = null;
+      });
+      FocusScope.of(context).requestFocus(_scoreFocusNode);
+    }
+  }
+
+  Future<void> _undoGameStats() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final gamesJson = prefs.getString('gameStats');
+      GameStats gameStats = gamesJson != null
+          ? GameStats.fromJson(jsonDecode(gamesJson))
+          : GameStats();
+      gameStats.totalGamesPlayed =
+          (gameStats.totalGamesPlayed - 1).clamp(0, gameStats.totalGamesPlayed);
+      await prefs.setString('gameStats', jsonEncode(gameStats.toJson()));
+    } catch (e) {
+      debugPrint('Fehler beim Rückgängigmachen der Spielstatistiken: $e');
+    }
   }
 
   void _showCancelDialog() {
