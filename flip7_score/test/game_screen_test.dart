@@ -191,9 +191,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.close));
       await tester.pumpAndSettle();
 
-      expect(find.text('Spiel abbrechen?'), findsOneWidget);
-      expect(find.text('Mit gleichen Spielern'), findsOneWidget);
-      expect(find.text('Neue Spieler'), findsOneWidget);
+      expect(find.text('Spiel beenden?'), findsOneWidget);
+      expect(find.text('Wähle eine Option:'), findsOneWidget);
+      expect(find.text('Neu starten'), findsOneWidget);
+      expect(find.text('Zurück zum Start'), findsOneWidget);
       expect(find.text('Weiterspielen'), findsOneWidget);
     });
 
@@ -210,7 +211,7 @@ void main() {
       await tester.tap(find.text('Weiterspielen'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Spiel abbrechen?'), findsNothing);
+      expect(find.text('Spiel beenden?'), findsNothing);
       expect(find.text('Runde 1'), findsOneWidget);
     });
 
@@ -501,6 +502,9 @@ void main() {
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.controller!.text, '5');
+      // Prüfe Markierung
+      expect(textField.controller!.selection.baseOffset, 0);
+      expect(textField.controller!.selection.extentOffset, 1);
     });
 
     testWidgets('Laufende Runde wird gesichert und nach Wiederschließen wiederhergestellt', (tester) async {
@@ -541,6 +545,9 @@ void main() {
 
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.controller!.text, '5');
+      // Prüfe Markierung
+      expect(textField.controller!.selection.baseOffset, 0);
+      expect(textField.controller!.selection.extentOffset, 1);
       await tester.tap(find.text('Punkte eintragen'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
@@ -618,6 +625,103 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Runde 1'), findsAtLeast(1));
+    });
+  });
+
+  group('GameScreen Undo mit markiertem Wert', () {
+    testWidgets('Undo füllt alten Wert ein und markiert ihn', (tester) async {
+      setPhoneSize(tester);
+      final players = [
+        Player(name: 'Alice'),
+        Player(name: 'Bob'),
+      ];
+      await tester.pumpWidget(
+        MaterialApp(home: GameScreen(players: players)),
+      );
+      await tester.pumpAndSettle();
+
+      // Alice: 25 Punkte eintragen
+      await tester.enterText(find.byType(TextField), '25');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('25 Punkte'), findsOneWidget);
+
+      // Long-Press auf Alice für Undo
+      final aliceTile = find.text('Alice');
+      await tester.longPress(aliceTile);
+      await tester.pumpAndSettle();
+
+      // Prüfe, dass der alte Wert (25) im TextField steht und markiert ist
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.controller!.text, '25');
+      expect(textField.controller!.selection.baseOffset, 0);
+      expect(textField.controller!.selection.extentOffset, 2);
+    });
+
+    testWidgets('Undo bei 0 Punkten zeigt leeres Feld', (tester) async {
+      setPhoneSize(tester);
+      final players = [
+        Player(name: 'Alice'),
+        Player(name: 'Bob'),
+      ];
+      await tester.pumpWidget(
+        MaterialApp(home: GameScreen(players: players)),
+      );
+      await tester.pumpAndSettle();
+
+      // Leere Eingabe = 0
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+
+      // Bob hat noch 0 Punkte (Alice hat 0 durch leere Eingabe)
+      expect(find.text('0 Punkte'), findsNWidgets(2));
+
+      // Long-Press auf Alice für Undo
+      final aliceTile = find.text('Alice');
+      await tester.longPress(aliceTile);
+      await tester.pumpAndSettle();
+
+      // Bei 0 sollte das Feld leer sein
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.controller!.text, '');
+    });
+  });
+
+  group('GameScreen Longpress auf Card für Runde rückgängig', () {
+    testWidgets('Long-Press auf gesamte Card macht Runde rückgängig', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      setPhoneSize(tester);
+
+      final players = [
+        Player(name: 'Alice'),
+        Player(name: 'Bob'),
+      ];
+
+      await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
+      await tester.pumpAndSettle();
+
+      // Runde 1 abschließen
+      await tester.enterText(find.byType(TextField), '10');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '5');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('Runde 2'), findsOneWidget);
+
+      // Long-Press auf die Card (nicht nur das Runden-Label)
+      // Die Card enthält "Runde 2" und das Undo-Icon
+      final cardFinder = find.byType(Card).first;
+      await tester.longPress(cardFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Runde 1'), findsOneWidget);
+      expect(find.text('10 Punkte'), findsOneWidget);
+      expect(find.text('0 Punkte'), findsOneWidget);
     });
   });
 }

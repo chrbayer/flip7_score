@@ -185,6 +185,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     // Mittlere Vibration bei Undo
     HapticFeedback.mediumImpact();
 
+    final oldScore = player.lastRoundScore;
+
     setState(() {
       player.undoLastScore();
       // Wenn der Spieler der aktuell ausgewählte war, bleib ausgewählt
@@ -192,7 +194,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       if (_selectedPlayerIndex != index) {
         _selectedPlayerIndex = index;
       }
-      _scoreController.clear();
+      // Alten Wert in Eingabefeld setzen und markieren
+      if (oldScore > 0) {
+        _scoreController.text = oldScore.toString();
+        _scoreController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _scoreController.text.length,
+        );
+      } else {
+        _scoreController.clear();
+      }
     });
   }
 
@@ -403,7 +414,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     setState(() {
       _currentRound--;
       _selectedPlayerIndex = lastPlayerIndex;
-      _scoreController.text = lastPlayerScore > 0 ? lastPlayerScore.toString() : '';
+      if (lastPlayerScore > 0) {
+        _scoreController.text = lastPlayerScore.toString();
+        _scoreController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _scoreController.text.length,
+        );
+      } else {
+        _scoreController.text = '';
+      }
       _lastAnimatedPlayer = null;
     });
 
@@ -454,7 +473,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       winner.hasEnteredScore = false;
       setState(() {
         _selectedPlayerIndex = widget.players.indexOf(winner);
-        _scoreController.text = winnerLastScore > 0 ? winnerLastScore.toString() : '';
+        if (winnerLastScore > 0) {
+          _scoreController.text = winnerLastScore.toString();
+          _scoreController.selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: _scoreController.text.length,
+          );
+        } else {
+          _scoreController.text = '';
+        }
         _lastAnimatedPlayer = null;
       });
       FocusScope.of(context).requestFocus(_scoreFocusNode);
@@ -480,22 +507,22 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Spiel abbrechen?'),
-        content: const Text('Was möchten Sie tun?'),
+        title: const Text('Spiel beenden?'),
+        content: const Text('Wähle eine Option:'),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _restartWithSamePlayers();
             },
-            child: const Text('Mit gleichen Spielern'),
+            child: const Text('Neu starten'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _startNewGame();
             },
-            child: const Text('Neue Spieler'),
+            child: const Text('Zurück zum Start'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -644,15 +671,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildRoundCard() {
-    return Card(
-      color: Theme.of(context).colorScheme.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            GestureDetector(
-              onLongPress: _currentRound > 1 ? _undoLastRound : null,
-              child: AnimatedBuilder(
+    return GestureDetector(
+      onLongPress: _currentRound > 1 ? _undoLastRound : null,
+      child: Card(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              AnimatedBuilder(
                 animation: _roundScaleAnimation,
                 builder: (context, child) {
                   return Transform.scale(
@@ -681,18 +708,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            if (_selectedPlayerIndex != null)
-              Text(
-                'Eingabe für: ${widget.players[_selectedPlayerIndex!].name}',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(height: 8),
+              if (_selectedPlayerIndex != null)
+                Text(
+                  'Eingabe für: ${widget.players[_selectedPlayerIndex!].name}',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

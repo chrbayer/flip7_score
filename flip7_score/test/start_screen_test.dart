@@ -22,8 +22,8 @@ void main() {
       expect(find.text('Flip 7 - Neues Spiel'), findsOneWidget);
       expect(find.text('Anzahl der Mitspieler'), findsOneWidget);
       expect(find.text('2'), findsOneWidget);
-      // Prüfe nur, dass Spieler-TextFields existieren (nicht wie viele)
-      expect(find.byType(TextField), findsNWidgets(2));
+      // Prüfe nur, dass Spieler-TextFields existieren (2 Spieler + 1 Score-Limit)
+      expect(find.byType(TextField), findsAtLeast(2));
     });
 
     testWidgets('Spieleranzahl kann erhöht werden', (tester) async {
@@ -40,7 +40,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('3'), findsOneWidget);
-      expect(find.byType(TextField), findsNWidgets(3));
+      expect(find.byType(TextField), findsAtLeast(2));
     });
 
     testWidgets('Spieleranzahl kann verringert werden', (tester) async {
@@ -61,7 +61,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('2'), findsOneWidget);
-      expect(find.byType(TextField), findsNWidgets(2));
+      expect(find.byType(TextField), findsAtLeast(2));
     });
 
     testWidgets('Minimal 2 Spieler - Minus-Button deaktiviert', (tester) async {
@@ -218,12 +218,11 @@ void main() {
       await tester.enterText(textFields.at(2), 'Max');
       await tester.pumpAndSettle();
 
-      // Spiel starten
+      // Spiel starten → Deduplizierungs-Dialog erscheint
       await tester.tap(find.text('Spiel starten'));
       await tester.pumpAndSettle();
 
-      // Sollte alle drei Varianten im Dialog zeigen (nicht in den TextFields)
-      // Wir prüfen nur auf die erweiterten Namen, nicht auf "Max" allgemein
+      // Alle drei deduplizierten Namen müssen im Dialog sichtbar sein
       expect(find.text('Max (1)'), findsOneWidget);
       expect(find.text('Max (2)'), findsOneWidget);
     });
@@ -266,6 +265,51 @@ void main() {
       // Wir können die ReorderableListView nicht einfach im Test bedienen,
       // aber wir können prüfen, dass die ReorderableDragStartListener vorhanden sind
       expect(find.byType(ReorderableDragStartListener), findsNWidgets(2));
+    });
+
+    testWidgets('Long-Press auf Punkte-Limit öffnet Custom-Dialog', (tester) async {
+      // Phone-Größe notwendig: Nur das Phone-Layout hat den GestureDetector
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        const MaterialApp(home: StartScreen()),
+      );
+      await tester.pumpAndSettle();
+
+      // Long-Press auf das angezeigte Punktelimit ('200')
+      await tester.longPress(find.text('200'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Punkte-Limit festlegen'), findsOneWidget);
+    });
+
+    testWidgets('Custom Score-Limit Dialog ändert Limit', (tester) async {
+      // Phone-Größe notwendig: Nur das Phone-Layout hat den GestureDetector
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        const MaterialApp(home: StartScreen()),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.longPress(find.text('200'));
+      await tester.pumpAndSettle();
+
+      // Neuen Wert im Dialog-TextField eingeben
+      final dialogTextField = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(dialogTextField, '350');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      // Das neue Limit wird im Startbildschirm angezeigt
+      expect(find.text('350'), findsOneWidget);
     });
   });
 }

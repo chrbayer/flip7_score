@@ -417,38 +417,41 @@ class _StartScreenState extends State<StartScreen> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              onPressed: _scoreLimit > 50
-                  ? () => setState(() => _scoreLimit -= 50)
-                  : null,
-              icon: const Icon(Icons.remove_circle),
-              iconSize: 36,
-            ),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border.all(
-                    color: Theme.of(context).colorScheme.primary),
-                borderRadius: BorderRadius.circular(8),
+        GestureDetector(
+          onLongPress: _showCustomScoreLimitDialog,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: _scoreLimit > 50
+                    ? () => setState(() => _scoreLimit -= 50)
+                    : null,
+                icon: const Icon(Icons.remove_circle),
+                iconSize: 36,
               ),
-              child: Text(
-                '$_scoreLimit',
-                style: const TextStyle(
-                    fontSize: 24, fontWeight: FontWeight.bold),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      color: Theme.of(context).colorScheme.primary),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$_scoreLimit',
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            IconButton(
-              onPressed: _scoreLimit < 500
-                  ? () => setState(() => _scoreLimit += 50)
-                  : null,
-              icon: const Icon(Icons.add_circle),
-              iconSize: 36,
-            ),
-          ],
+              IconButton(
+                onPressed: _scoreLimit < 500
+                    ? () => setState(() => _scoreLimit += 50)
+                    : null,
+                icon: const Icon(Icons.add_circle),
+                iconSize: 36,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 24),
         const Text(
@@ -557,6 +560,64 @@ class _StartScreenState extends State<StartScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  void _showCustomScoreLimitDialog() {
+    final controller = TextEditingController(text: _scoreLimit.toString());
+    String? errorText;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Punkte-Limit festlegen'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Punkte',
+                  hintText: '50 - 1000',
+                  border: const OutlineInputBorder(),
+                  errorText: errorText,
+                ),
+                onSubmitted: (value) {
+                  final newLimit = int.tryParse(value);
+                  if (newLimit != null && newLimit >= 50 && newLimit <= 1000) {
+                    setState(() => _scoreLimit = newLimit);
+                    Navigator.pop(dialogContext);
+                  } else {
+                    setDialogState(() => errorText = 'Gültige Werte: 50 - 1000');
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newLimit = int.tryParse(controller.text);
+                if (newLimit != null && newLimit >= 50 && newLimit <= 1000) {
+                  setState(() => _scoreLimit = newLimit);
+                  Navigator.pop(dialogContext);
+                } else {
+                  setDialogState(() => errorText = 'Gültige Werte: 50 - 1000');
+                }
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

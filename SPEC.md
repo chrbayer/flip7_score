@@ -25,12 +25,12 @@
 - Leere Eingabe wird als 0 interpretiert
 - Farbliche Markierung (grün) zeigt Spieler mit bereits eingetragenem Score
 - Automatischer Runde-Wechsel sobald alle Spieler einen Score haben
-- **Undo (einzelner Spieler)**: Langer Druck auf einen bereits eingetragenen Spieler macht dessen letzten Score rückgängig
-- **Undo (Runde)**: Langer Druck auf die Runde-Zahl (mit Undo-Icon) macht die letzte abgeschlossene Runde rückgängig
+- **Undo (einzelner Spieler)**: Langer Druck auf einen bereits eingetragenen Spieler macht dessen letzten Score rückgängig; der alte Wert wird in das Eingabefeld gesetzt und markiert
+- **Undo (Runde)**: Langer Druck auf die gesamte Runde-Card (mit Undo-Icon) macht die letzte abgeschlossene Runde rückgängig
 - **Unterbrochene Runde wiederherstellen**: Beim Rückgängig-Machen einer Runde werden bereits in der aktuellen Runde eingegebene Scores gespeichert und beim nächsten Runde-Wechsel automatisch wiederhergestellt
 
 ### 2.3 Gewinnbedingung
-- Sobald ein Spieler ≥ konfigurierbares Punktelimit erreicht, gewinnt dieser (Standard: 200, konfigurierbar in den Einstellungen)
+- Sobald ein Spieler ≥ konfigurierbares Punktelimit erreicht, gewinnt dieser (Standard: 200, konfigurierbar von 50-1000 per Long-Press auf das Limit)
 - Gewinner-Anzeige mit Namen und Punktestand
 - Option für neue Partie mit gleichen oder neuen Spielern
 - Animation bei Erreichen des Gewinnerstatus
@@ -83,7 +83,7 @@
 1. **Startbildschirm**: Spielerauswahl (Anzahl + Namen)
 2. **Spielbildschirm**: Aktueller Spielstand, Runde, Punkteeingabe, Statistics-Button
 3. **Gewinnerbildschirm**: Gewinner-Anzeige, Endstand-Tabelle, "Neue Partie"-Option
-4. **Statistik-Bildschirm**: Übersicht aller Statistiken
+4. **Statistik-Dialog**: Übersicht aller Statistiken (als AlertDialog im Startbildschirm)
 
 ### 3.2 Farbschema
 - Primär: Blau (#2196F3)
@@ -107,7 +107,7 @@
 - **State Management**: StatefulWidget mit setState (einfache App)
 - **Datenmodell**:
   - Player-Klasse mit `name`, `score`, `hasEnteredScore`, `lastRoundScore` (für Undo)
-  - Round-Klasse mit `roundNumber`, `scores` (Map<SpielerName, Punkte>) und `lastPlayerIndex` (für Runde-Undo)
+  - Round-Klasse mit `roundNumber`, `playerScores` (Map<SpielerName, Punkte>) und `lastPlayerIndex` (für Runde-Undo)
   - Statistics-Klasse für Spielstatistiken
 - **Navigation**: Navigator mit anonymen Routes (MaterialPageRoute)
 - **Widgets**: Material Design Components
