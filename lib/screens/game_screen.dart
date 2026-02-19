@@ -73,7 +73,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     setState(() {
       _selectedPlayerIndex = index;
-      _scoreController.clear();
     });
   }
 
@@ -100,6 +99,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       widget.players[_selectedPlayerIndex!].lastRoundScore = score;
       widget.players[_selectedPlayerIndex!].score += score;
       widget.players[_selectedPlayerIndex!].hasEnteredScore = true;
+
+      // Eingabefeld leeren nach erfolgreichem Eintragen
+      _scoreController.clear();
 
       // Check for winner
       if (widget.players[_selectedPlayerIndex!].score >= widget.scoreLimit) {
@@ -171,7 +173,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       }
       setState(() {
         _selectedPlayerIndex = nextIndex;
-        _scoreController.clear();
       });
       // Fokus auf TextField setzen
       FocusScope.of(context).requestFocus(_scoreFocusNode);
@@ -311,8 +312,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         if (existingIndex >= 0) {
           final ps = playerStatsList[existingIndex];
           // Gewinnername ermitteln aus lastPlayerIndex
-          final winnerName = round.lastPlayerIndex != null && round.lastPlayerIndex! < widget.players.length
-              ? widget.players[round.lastPlayerIndex!].name
+          final winnerName = round.lastPlayerIndex < widget.players.length
+              ? widget.players[round.lastPlayerIndex].name
               : '';
           playerStatsList[existingIndex] = ps.copyWith(
             totalScore: (ps.totalScore - roundScore).clamp(0, ps.totalScore),
@@ -461,6 +462,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         builder: (context) => WinnerScreen(
           winner: winner,
           allPlayers: widget.players,
+          roundHistory: _roundHistory,
         ),
       ),
     );
@@ -469,6 +471,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _roundHistory.removeLast();
       await _undoRoundStats(winningRound, isWinningRound: true);
       await _undoGameStats();
+      if (!mounted) return;
       winner.score -= winnerLastScore;
       winner.hasEnteredScore = false;
       setState(() {

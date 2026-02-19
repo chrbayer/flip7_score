@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import '../models/player.dart';
+import '../models/round.dart';
 import 'game_screen.dart';
 import 'start_screen.dart';
 
 class WinnerScreen extends StatefulWidget {
   final Player winner;
   final List<Player> allPlayers;
+  final List<Round> roundHistory;
 
   const WinnerScreen({
     super.key,
     required this.winner,
     required this.allPlayers,
+    required this.roundHistory,
   });
 
   @override
@@ -87,6 +90,39 @@ class _WinnerScreenState extends State<WinnerScreen> {
     );
   }
 
+  void _showRoundsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rundenübersicht'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: widget.roundHistory.length,
+            itemBuilder: (context, index) {
+              final round = widget.roundHistory[index];
+              final scoresText = round.playerScores.entries
+                  .map((e) => '${e.key}: +${e.value}')
+                  .join(', ');
+              return ListTile(
+                dense: true,
+                title: Text('Runde ${round.roundNumber}'),
+                subtitle: Text(scoresText),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Schließen'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,6 +189,17 @@ class _WinnerScreenState extends State<WinnerScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
+                if (widget.roundHistory.isNotEmpty)
+                  OutlinedButton.icon(
+                    onPressed: () => _showRoundsDialog(context),
+                    icon: const Icon(Icons.history),
+                    label: Text('Rundenübersicht (${widget.roundHistory.length})'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                if (widget.roundHistory.isNotEmpty)
+                  const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () => _restartWithSamePlayers(context),
                   style: ElevatedButton.styleFrom(
@@ -272,6 +319,7 @@ class _WinnerScreenState extends State<WinnerScreen> {
               ),
             ],
           ),
+          const Spacer(),
           Text(
             '${player.score}',
             style: TextStyle(

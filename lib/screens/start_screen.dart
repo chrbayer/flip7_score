@@ -81,8 +81,12 @@ class _StartScreenState extends State<StartScreen> {
         _scoreLimit = savedLimit;
         _recentNames = savedRecent;
 
-        for (var c in _nameControllers) c.dispose();
-        for (var f in _nameFocusNodes) f.dispose();
+        for (var c in _nameControllers) {
+          c.dispose();
+        }
+        for (var f in _nameFocusNodes) {
+          f.dispose();
+        }
         _nameControllers.clear();
         _nameFocusNodes.clear();
         _committedNames.clear();
@@ -310,9 +314,8 @@ class _StartScreenState extends State<StartScreen> {
         Expanded(
           child: ReorderableListView.builder(
             itemCount: _playerCount,
-            onReorder: (oldIndex, newIndex) {
+            onReorderItem: (oldIndex, newIndex) {
               setState(() {
-                if (newIndex > oldIndex) newIndex--;
                 final item = _playerOrder.removeAt(oldIndex);
                 _playerOrder.insert(newIndex, item);
               });
@@ -462,9 +465,8 @@ class _StartScreenState extends State<StartScreen> {
         Expanded(
           child: ReorderableListView.builder(
             itemCount: _playerCount,
-            onReorder: (oldIndex, newIndex) {
+            onReorderItem: (oldIndex, newIndex) {
               setState(() {
-                if (newIndex > oldIndex) newIndex--;
                 final item = _playerOrder.removeAt(oldIndex);
                 _playerOrder.insert(newIndex, item);
               });
@@ -668,8 +670,12 @@ class _StartScreenState extends State<StartScreen> {
   }
 
   void _showStatsDialog(BuildContext context) async {
+    final dialogContext = context;
+
     // Statistiken laden
     final prefs = await SharedPreferences.getInstance();
+
+    if (!mounted) return;
 
     // Spielstatistiken
     final gamesJson = prefs.getString('gameStats');
@@ -685,9 +691,12 @@ class _StartScreenState extends State<StartScreen> {
 
     if (!mounted) return;
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+    // Use WidgetsBinding.instance.addPostFrameCallback to ensure we're in the right frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog(
+        context: dialogContext,
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Statistiken'),
         content: SingleChildScrollView(
           child: Column(
@@ -734,16 +743,17 @@ class _StartScreenState extends State<StartScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => _resetStats(context, prefs),
+            onPressed: () => _resetStats(dialogContext, prefs),
             child: const Text('Zurücksetzen'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Schließen'),
           ),
         ],
       ),
-    );
+      );
+    });
   }
 
   void _resetStats(BuildContext context, SharedPreferences prefs) {

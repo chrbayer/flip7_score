@@ -120,6 +120,23 @@ void main() {
       expect(find.text('0 Punkte'), findsNWidgets(2));
     });
 
+    testWidgets('Eingabefeld wird nach Punkte eintragen geleert', (tester) async {
+      setPhoneSize(tester);
+      await tester.pumpWidget(
+        MaterialApp(home: GameScreen(players: players)),
+      );
+      await tester.pumpAndSettle();
+
+      // Punkte eingeben
+      await tester.enterText(find.byType(TextField), '10');
+      await tester.tap(find.text('Punkte eintragen'));
+      await tester.pumpAndSettle();
+
+      // Prüfen dass das TextField leer ist
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.controller?.text, isEmpty);
+    });
+
     testWidgets('Runde wechselt nach allen Spielern', (tester) async {
       setPhoneSize(tester);
       await tester.pumpWidget(

@@ -26,6 +26,7 @@ void main() {
           home: WinnerScreen(
             winner: players[0],
             allPlayers: players,
+            roundHistory: const [],
           ),
         ),
       );
@@ -49,6 +50,7 @@ void main() {
           home: WinnerScreen(
             winner: players[0],
             allPlayers: players,
+            roundHistory: const [],
           ),
         ),
       );
@@ -72,6 +74,7 @@ void main() {
           home: WinnerScreen(
             winner: players[0],
             allPlayers: players,
+            roundHistory: const [],
           ),
         ),
       );
@@ -91,6 +94,7 @@ void main() {
           home: WinnerScreen(
             winner: players[0],
             allPlayers: players,
+            roundHistory: const [],
           ),
         ),
       );
@@ -110,6 +114,7 @@ void main() {
           home: WinnerScreen(
             winner: players[0],
             allPlayers: players,
+            roundHistory: const [],
           ),
         ),
       );
@@ -128,6 +133,7 @@ void main() {
           home: WinnerScreen(
             winner: players[0],
             allPlayers: players,
+            roundHistory: const [],
           ),
         ),
       );
@@ -154,6 +160,7 @@ void main() {
           home: WinnerScreen(
             winner: players[0],
             allPlayers: players,
+            roundHistory: const [],
           ),
         ),
       );
@@ -187,7 +194,7 @@ void main() {
       );
       navigatorKey.currentState!.push(
         MaterialPageRoute(
-          builder: (_) => WinnerScreen(winner: players[0], allPlayers: players),
+          builder: (_) => WinnerScreen(winner: players[0], allPlayers: players, roundHistory: const []),
         ),
       );
       await tester.pump(); // initialen Frame verarbeiten
