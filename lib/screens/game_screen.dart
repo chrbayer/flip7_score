@@ -24,7 +24,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   final TextEditingController _scoreController = TextEditingController();
   final FocusNode _scoreFocusNode = FocusNode();
   final List<Round> _roundHistory = [];
-  bool _historyExpanded = false;
   Map<int, int>? _pendingRoundState; // playerIndex → score bei Runden-Undo
   late AnimationController _roundAnimationController;
   late Animation<double> _roundScaleAnimation;
@@ -546,7 +545,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _selectedPlayerIndex = 0;
       _scoreController.clear();
       _roundHistory.clear();
-      _historyExpanded = false;
     });
     // Fokus auf TextField setzen
     FocusScope.of(context).requestFocus(_scoreFocusNode);
@@ -596,42 +594,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               _buildTabletHeader()
             else
               _buildPhoneHeader(),
-            // Runden-Historie (ausklappbar) - nur im Phone-Modus, im Tablet ist sie im Header
-            if (!_isTablet && _roundHistory.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Card(
-                child: ExpansionTile(
-                  leading: const Icon(Icons.history),
-                  title: Text('Runden (${_roundHistory.length})'),
-                  trailing: Icon(
-                    _historyExpanded ? Icons.expand_less : Icons.expand_more,
-                  ),
-                  onExpansionChanged: (expanded) {
-                    setState(() {
-                      _historyExpanded = expanded;
-                    });
-                  },
-                  children: [
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _roundHistory.length,
-                      itemBuilder: (context, index) {
-                        final round = _roundHistory[index];
-                        final scoresText = round.playerScores.entries
-                            .map((e) => '${e.key}: +${e.value}')
-                            .join(', ');
-                        return ListTile(
-                          dense: true,
-                          title: Text('Runde ${round.roundNumber}'),
-                          subtitle: Text(scoresText),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
             const SizedBox(height: 16),
             if (_isTablet) ...[
               Expanded(
@@ -644,14 +606,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 ),
               ),
             ] else ...[
-              _buildScoreInput(),
-              const SizedBox(height: 24),
+              // Phone-Modus: Spielerliste VOR dem Eingabefeld, mit flexibler Höhe
               const Text(
                 'Spielstände',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
-              Expanded(child: _buildPlayerList()),
+              const SizedBox(height: 6),
+              Flexible(child: _buildPlayerList()),
+              const SizedBox(height: 16),
+              _buildScoreInput(),
             ],
           ],
         ),
@@ -660,13 +623,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildTabletHeader() {
-    return Row(
-      children: [
-        Expanded(child: _buildRoundCard()),
-        const SizedBox(width: 16),
-        Expanded(child: _buildHistoryCard()),
-      ],
-    );
+    return _buildRoundCard();
   }
 
   Widget _buildPhoneHeader() {
@@ -679,8 +636,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       child: Card(
         color: Theme.of(context).colorScheme.primaryContainer,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AnimatedBuilder(
                 animation: _roundScaleAnimation,
@@ -691,12 +649,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   );
                 },
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'Runde $_currentRound',
                       style: const TextStyle(
-                        fontSize: 24,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -708,15 +665,27 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         color: Theme.of(context).colorScheme.primary,
                       ),
                     ],
+                    const Spacer(),
+                    if (_roundHistory.isNotEmpty)
+                      IconButton(
+                        icon: Badge(
+                          label: Text('${_roundHistory.length}'),
+                          child: const Icon(Icons.history),
+                        ),
+                        onPressed: _showHistoryBottomSheet,
+                        tooltip: 'Runden-Historie',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               if (_selectedPlayerIndex != null)
                 Text(
                   'Eingabe für: ${widget.players[_selectedPlayerIndex!].name}',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 14,
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w600,
                   ),
@@ -728,40 +697,32 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildHistoryCard() {
-    if (_roundHistory.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Card(
-      child: ExpansionTile(
-        leading: const Icon(Icons.history),
-        title: Text('Runden (${_roundHistory.length})'),
-        trailing: Icon(
-          _historyExpanded ? Icons.expand_less : Icons.expand_more,
-        ),
-        onExpansionChanged: (expanded) {
-          setState(() {
-            _historyExpanded = expanded;
-          });
+  void _showHistoryBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _roundHistory.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Runden-Historie',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            );
+          }
+          final round = _roundHistory[index - 1];
+          final scoresText = round.playerScores.entries
+              .map((e) => '${e.key}: +${e.value}')
+              .join(', ');
+          return ListTile(
+            dense: true,
+            title: Text('Runde ${round.roundNumber}'),
+            subtitle: Text(scoresText),
+          );
         },
-        children: [
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _roundHistory.length,
-            itemBuilder: (context, index) {
-              final round = _roundHistory[index];
-              final scoresText = round.playerScores.entries
-                  .map((e) => '${e.key}: +${e.value}')
-                  .join(', ');
-              return ListTile(
-                dense: true,
-                title: Text('Runde ${round.roundNumber}'),
-                subtitle: Text(scoresText),
-              );
-            },
-          ),
-        ],
       ),
     );
   }
@@ -773,7 +734,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         TextField(
           controller: _scoreController,
           focusNode: _scoreFocusNode,
-          keyboardType: TextInputType.number,
+          keyboardType: TextInputType.none,
+          readOnly: true,
           autofocus: true,
           decoration: const InputDecoration(
             labelText: 'Punkte eingeben',
@@ -781,19 +743,149 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.add_circle_outline),
           ),
-          onSubmitted: (_) => _submitScore(),
         ),
-        const SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: _submitScore,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.secondary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-          child: const Text('Punkte eintragen', style: TextStyle(fontSize: 18)),
+        const SizedBox(height: 12),
+        _buildNumberPad(),
+      ],
+    );
+  }
+
+  Widget _buildNumberPad() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNumberButton('1'),
+            _buildNumberButton('2'),
+            _buildNumberButton('3'),
+          ],
+        ),
+        SizedBox(height: _isTablet ? 10 : 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNumberButton('4'),
+            _buildNumberButton('5'),
+            _buildNumberButton('6'),
+          ],
+        ),
+        SizedBox(height: _isTablet ? 10 : 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNumberButton('7'),
+            _buildNumberButton('8'),
+            _buildNumberButton('9'),
+          ],
+        ),
+        SizedBox(height: _isTablet ? 10 : 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildActionButton(
+              key: const Key('btn_delete'),
+              icon: Icons.backspace_outlined,
+              onPressed: () {
+                final selection = _scoreController.selection;
+                // Markierten Text löschen falls vorhanden
+                if (selection.isValid && selection.start != selection.end) {
+                  final text = _scoreController.text;
+                  _scoreController.text = text.replaceRange(selection.start, selection.end, '');
+                  _scoreController.selection = TextSelection.collapsed(
+                    offset: selection.start,
+                  );
+                } else if (_scoreController.text.isNotEmpty) {
+                  _scoreController.text = _scoreController.text
+                      .substring(0, _scoreController.text.length - 1);
+                }
+              },
+              tooltip: 'Löschen',
+            ),
+            _buildNumberButton('0'),
+            _buildActionButton(
+              key: const Key('btn_confirm'),
+              icon: Icons.check,
+              onPressed: _submitScore,
+              tooltip: 'Bestätigen',
+              isPrimary: true,
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildNumberButton(String number) {
+    final buttonSize = _isTablet ? 70.0 : 50.0;
+    final fontSize = _isTablet ? 24.0 : 18.0;
+    return SizedBox(
+      width: buttonSize,
+      height: _isTablet ? 56.0 : 42.0,
+      child: ElevatedButton(
+        key: Key('numkey_$number'),
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          // Markierten Text ersetzen falls vorhanden
+          final selection = _scoreController.selection;
+          if (selection.isValid && selection.start != selection.end) {
+            final text = _scoreController.text;
+            _scoreController.text = text.replaceRange(selection.start, selection.end, number);
+            _scoreController.selection = TextSelection.collapsed(
+              offset: selection.start + 1,
+            );
+          } else {
+            _scoreController.text += number;
+            // Cursor ans Ende setzen
+            _scoreController.selection = TextSelection.fromPosition(
+              TextPosition(offset: _scoreController.text.length),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          foregroundColor: Theme.of(context).colorScheme.primary,
+          elevation: 2,
+          padding: EdgeInsets.zero,
+        ),
+        child: Text(
+          number,
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    Key? key,
+    required IconData icon,
+    required VoidCallback onPressed,
+    required String tooltip,
+    bool isPrimary = false,
+  }) {
+    final buttonSize = _isTablet ? 70.0 : 50.0;
+    final iconSize = _isTablet ? 28.0 : 20.0;
+    return SizedBox(
+      width: buttonSize,
+      height: _isTablet ? 56.0 : 42.0,
+      child: ElevatedButton(
+        key: key,
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          onPressed();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isPrimary
+              ? Theme.of(context).colorScheme.secondary
+              : Theme.of(context).colorScheme.surface,
+          foregroundColor: isPrimary
+              ? Colors.white
+              : Theme.of(context).colorScheme.primary,
+          elevation: 2,
+          padding: EdgeInsets.zero,
+        ),
+        child: Icon(icon, size: iconSize),
+      ),
     );
   }
 
@@ -882,15 +974,29 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     child: child,
                   );
                 },
-                child: Text(
-                  '${player.score}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: player.score >= widget.scoreLimit
-                        ? Colors.green
-                        : Theme.of(context).colorScheme.primary,
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${player.score}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: player.score >= widget.scoreLimit
+                            ? Colors.green
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    if (hasEntered && player.lastRoundScore > 0)
+                      Text(
+                        '+${player.lastRoundScore}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -927,7 +1033,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             player.name,
             style: TextStyle(
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              fontSize: 18,
+              fontSize: 16,
               color: hasEntered ? Colors.green[700] : null,
             ),
           ),
@@ -940,15 +1046,29 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 child: child,
               );
             },
-            child: Text(
-              '${player.score} Punkte',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: player.score >= widget.scoreLimit
-                    ? Colors.green
-                    : Theme.of(context).colorScheme.primary,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${player.score} Punkte',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: player.score >= widget.scoreLimit
+                        ? Colors.green
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                if (hasEntered && player.lastRoundScore > 0)
+                  Text(
+                    '+${player.lastRoundScore}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.green[700],
+                    ),
+                  ),
+              ],
             ),
           ),
         ),

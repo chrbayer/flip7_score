@@ -10,8 +10,8 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Namensverlauf**: Beim Hinzufügen eines Spielers wird automatisch ein zuletzt verwendeter Name vorgeschlagen (kein Duplikat zu aktiven Spielern)
 - **Deduplizierung**: Doppelte Namen erhalten automatisch ein " (1)", " (2)" usw.; ein Dialog informiert alle Spieler vor Spielstart über ihre endgültigen Namen
 - **Punkteerfassung**: Jeder Spieler nur einmal pro Runde, leere Eingabe = 0
-- **Eingabefeld leeren**: Das Eingabefeld wird nach dem erfolgreichen Eintragen geleert
-- **Punkte bleiben beim Spielerwechsel**: Wenn man nach der Eingabe auf einen anderen Spieler drückt, bleibt der eingegebene Wert im Feld
+- **Number Pad**: Ziffernblock (0-9) mit Bestätigen- und Löschen-Button für komfortable Touch-Eingabe
+- **+Score Anzeige**: Letzte eingetragene Punkte werden in der Spielerliste angezeigt (z.B. "+10")
 - **Undo (einzelner Spieler)**: Langer Druck auf einen eingetragenen Spieler macht dessen letzten Score rückgängig; alter Wert wird markiert
 - **Undo (Runde)**: Langer Druck auf die gesamte Runde-Card macht die letzte abgeschlossene Runde rückgängig
 - **Unterbrochene Runde wiederherstellen**: Bereits eingegebene Scores werden beim Rückgängig-Machen einer Runde gespeichert und beim nächsten Runde-Wechsel automatisch wiederhergestellt
@@ -23,7 +23,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Rückkehr vom Gewinner-Bildschirm**: "Zurück zum Spiel"-Button mit Bestätigungsdialog bei versehentlicher Gewinner-Auslösung
 - **Spiel abbrechen**: Button mit Dialog für gleiche/neue Spieler
 - **Neue Partie**: Scores und Status werden zurückgesetzt
-- **Round History**: Eingeklappte Übersicht vergangener Runden im Spielbildschirm und im Gewinnerbildschirm (mit Rundendetails)
+- **Round History**: Icon mit Badge (Anzahl Runden) im Spielbildschirm öffnet BottomSheet; "Rundenübersicht"-Button im Gewinnerbildschirm zeigt alle gespielten Runden mit Scores
 
 ## Bildschirme
 
@@ -40,7 +40,7 @@ Eine Flutter-Android-App zur Spielstand-Verwaltung für das Kartenspiel Flip 7.
 - **Persistenz**: shared_preferences
 - **Design**: Material Design 3
 - **Responsive Layout**: Optimiert für Tablets (≥600dp) mit 2-Spalten-Layout
-- **Tests**: 75 Unit- und Widget-Tests
+- **Tests**: 80 Unit- und Widget-Tests
 
 ## Farbschema
 

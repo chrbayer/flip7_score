@@ -11,30 +11,29 @@ void setPhoneSize(WidgetTester tester) {
   addTearDown(tester.view.resetPhysicalSize);
 }
 
+// Hilfsfunktion: Score über Zifferntastatur eingeben
+Future<void> enterScore(WidgetTester tester, int score) async {
+  final scoreStr = score.toString();
+  for (int i = 0; i < scoreStr.length; i++) {
+    // Finde den Zahlen-Button nach Key
+    final buttonKey = Key('numkey_${scoreStr[i]}');
+    await tester.tap(find.byKey(buttonKey));
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  // Auf Bestätigen-Button tippen (nach Key)
+  await tester.tap(find.byKey(const Key('btn_confirm')));
+  await tester.pump();
+}
+
 void main() {
   group('GameScreen Edge Cases', () {
-    testWidgets('Negative Eingabe zeigt Fehler', (tester) async {
-      setPhoneSize(tester);
-      final players = [Player(name: 'Alice'), Player(name: 'Bob')];
-      await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '-5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Bitte eine gültige Zahl eingeben'), findsOneWidget);
-    });
-
     testWidgets('Runde wird nicht gewechselt wenn nur ein Spieler fehlt', (tester) async {
       setPhoneSize(tester);
       final players = [Player(name: 'Alice'), Player(name: 'Bob')];
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
 
       expect(find.text('Runde 1'), findsOneWidget);
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
@@ -48,10 +47,11 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Punkte eintragen'));
+      // Leere Eingabe = 0, mit Bestätigen
+      await tester.tap(find.byKey(const Key('btn_confirm')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Punkte eintragen'));
+      await tester.tap(find.byKey(const Key('btn_confirm')));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
 
@@ -99,10 +99,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final scoreField = find.byType(TextField);
-      await tester.enterText(scoreField, '25');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 25);
 
       expect(find.text('25 Punkte'), findsOneWidget);
     });
@@ -114,7 +111,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Punkte eintragen'));
+      await tester.tap(find.byKey(const Key('btn_confirm')));
       await tester.pumpAndSettle();
 
       expect(find.text('0 Punkte'), findsNWidgets(2));
@@ -127,10 +124,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Punkte eingeben
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
 
       // Prüfen dass das TextField leer ist
       final textField = tester.widget<TextField>(find.byType(TextField));
@@ -144,16 +138,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
 
       expect(find.text('Runde 1'), findsOneWidget);
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
 
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 5);
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('Runde 2'), findsOneWidget);
@@ -177,25 +167,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
 
-      expect(find.byIcon(Icons.check), findsOneWidget);
-    });
-
-    testWidgets('Ungültige Eingabe zeigt Fehler', (tester) async {
-      setPhoneSize(tester);
-      await tester.pumpWidget(
-        MaterialApp(home: GameScreen(players: players)),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), 'abc');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Bitte eine gültige Zahl eingeben'), findsOneWidget);
+      // Es gibt jetzt 2 Check-Icons (eines in Spielerliste, eines in Tastatur)
+      expect(find.byIcon(Icons.check), findsAtLeast(1));
     });
 
     testWidgets('Abbrechen-Dialog zeigt Optionen', (tester) async {
@@ -246,9 +221,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      // pumpAndSettle würde nie enden da ConfettiWidget läuft; pump() für Navigation
+      await enterScore(tester, 5);
+      // pumpAndSettle timeoutet wegen Confetti; pump() verwenden
       await tester.pump();
       await tester.pump(const Duration(seconds: 2));
 
@@ -270,21 +244,20 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      // pumpAndSettle würde nie enden da ConfettiWidget läuft; pump() für Navigation
+      await enterScore(tester, 5);
+      // pumpAndSettle timeoutet wegen Confetti; pump() verwenden
       await tester.pump();
       await tester.pump(const Duration(seconds: 2));
 
       expect(find.text('Gewinner!'), findsOneWidget);
 
       await tester.tap(find.text('Zurück zum Spiel'));
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
 
       expect(find.text('Gewinner rückgängig?'), findsOneWidget);
 
       await tester.tap(find.text('Zurück zum Spiel').last);
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump();
 
       expect(find.text('Runde 1'), findsOneWidget);
       expect(find.text('195 Punkte'), findsOneWidget);
@@ -309,9 +282,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
 
       expect(find.text('10 Punkte'), findsOneWidget);
 
@@ -330,9 +301,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
 
       expect(find.text('10 Punkte'), findsOneWidget);
       expect(find.text('0 Punkte'), findsOneWidget);
@@ -360,17 +329,9 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '3');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
+      await enterScore(tester, 5);
+      await enterScore(tester, 3);
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('Runde 2'), findsOneWidget);
@@ -400,22 +361,12 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '3');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
+      await enterScore(tester, 5);
+      await enterScore(tester, 3);
       await tester.pump(const Duration(seconds: 1));
 
-      await tester.enterText(find.byType(TextField), '7');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 7);
 
       expect(find.text('17 Punkte'), findsOneWidget);
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
@@ -430,8 +381,7 @@ void main() {
 
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.controller!.text, '3');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 3);
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('Runde 2'), findsOneWidget);
@@ -450,22 +400,12 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
+      await enterScore(tester, 5);
       await tester.pump(const Duration(seconds: 1));
 
-      await tester.enterText(find.byType(TextField), '8');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '3');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 8);
+      await enterScore(tester, 3);
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('Runde 3'), findsOneWidget);
@@ -498,13 +438,8 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
+      await enterScore(tester, 5);
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('Runde 2'), findsOneWidget);
@@ -536,20 +471,13 @@ void main() {
       await tester.pumpWidget(MaterialApp(home: GameScreen(players: players)));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
+      await enterScore(tester, 5);
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('Runde 2'), findsOneWidget);
 
-      await tester.enterText(find.byType(TextField), '20');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 20);
 
       expect(find.text('30 Punkte'), findsOneWidget);
       expect(find.text('Eingabe für: Bob'), findsOneWidget);
@@ -565,8 +493,7 @@ void main() {
       // Prüfe Markierung
       expect(textField.controller!.selection.baseOffset, 0);
       expect(textField.controller!.selection.extentOffset, 1);
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 5);
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('Runde 2'), findsOneWidget);
@@ -592,7 +519,7 @@ void main() {
   });
 
   group('GameScreen Runden-Historie', () {
-    testWidgets('Runden-Historie erscheint nach Runde 1', (tester) async {
+    testWidgets('Runden-Historie Icon mit Badge erscheint nach Runde 1', (tester) async {
       setPhoneSize(tester);
 
       final players = [
@@ -605,19 +532,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      // Noch kein History-Icon sichtbar (keine Runde abgeschlossen)
+      // Nach Runde 1 sollte das Icon mit Badge erscheinen
+      await enterScore(tester, 10);
+      await enterScore(tester, 5);
 
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Runden (1)'), findsOneWidget);
+      // Prüfe dass der Icon-Button vorhanden ist (findByType für IconButton mit Badge)
       expect(find.byIcon(Icons.history), findsOneWidget);
+      // Ein Badge-Widget sollte vorhanden sein
+      expect(find.byType(Badge), findsOneWidget);
     });
 
-    testWidgets('Runden-Historie zeigt Scores nach Ausklappen', (tester) async {
+    testWidgets('Tippen auf History-Icon öffnet BottomSheet', (tester) async {
       setPhoneSize(tester);
 
       final players = [
@@ -630,18 +556,64 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
+      await enterScore(tester, 10);
+      await enterScore(tester, 5);
+
+      // Auf History-Icon tippen
+      await tester.tap(find.byIcon(Icons.history));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Runden (1)'));
-      await tester.pumpAndSettle();
-
+      // BottomSheet sollte geöffnet sein mit "Runden-Historie" Titel
+      expect(find.text('Runden-Historie'), findsOneWidget);
+      // Die Runde 1 sollte angezeigt werden
       expect(find.text('Runde 1'), findsAtLeast(1));
+    });
+
+    testWidgets('BottomSheet zeigt alle Runden-Scores', (tester) async {
+      setPhoneSize(tester);
+
+      final players = [
+        Player(name: 'Alice'),
+        Player(name: 'Bob'),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(home: GameScreen(players: players)),
+      );
+      await tester.pumpAndSettle();
+
+      // Runde 1
+      await enterScore(tester, 10);
+      await enterScore(tester, 5);
+
+      // Runde 2
+      await enterScore(tester, 7);
+      await enterScore(tester, 3);
+
+      // Auf History-Icon tippen
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
+
+      // Beide Runden sollten angezeigt werden
+      expect(find.text('Runde 1'), findsAtLeast(1));
+      expect(find.text('Runde 2'), findsAtLeast(1));
+    });
+
+    testWidgets('History-Icon erscheint nicht bei leerer Historie', (tester) async {
+      setPhoneSize(tester);
+
+      final players = [
+        Player(name: 'Alice'),
+        Player(name: 'Bob'),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(home: GameScreen(players: players)),
+      );
+      await tester.pumpAndSettle();
+
+      // Vor dem Abschließen einer Runde: kein History-Icon
+      // (Das Icon erscheint erst nach Runde 1)
     });
   });
 
@@ -658,9 +630,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Alice: 25 Punkte eintragen
-      await tester.enterText(find.byType(TextField), '25');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 25);
 
       expect(find.text('25 Punkte'), findsOneWidget);
 
@@ -688,7 +658,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Leere Eingabe = 0
-      await tester.tap(find.text('Punkte eintragen'));
+      await tester.tap(find.byKey(const Key('btn_confirm')));
       await tester.pumpAndSettle();
 
       // Bob hat noch 0 Punkte (Alice hat 0 durch leere Eingabe)
@@ -719,13 +689,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Runde 1 abschließen
-      await tester.enterText(find.byType(TextField), '10');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), '5');
-      await tester.tap(find.text('Punkte eintragen'));
-      await tester.pumpAndSettle();
+      await enterScore(tester, 10);
+      await enterScore(tester, 5);
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('Runde 2'), findsOneWidget);

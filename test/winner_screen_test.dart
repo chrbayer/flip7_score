@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flip7_score/models/player.dart';
+import 'package:flip7_score/models/round.dart';
 import 'package:flip7_score/screens/winner_screen.dart';
 
 void main() {
@@ -211,6 +212,155 @@ void main() {
 
       // WinnerScreen wurde per Navigator.pop verlassen
       expect(find.text('GEWINNER'), findsNothing);
+    });
+
+    testWidgets('Rundenübersicht Button erscheint bei nicht-leerer Historie', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final roundHistory = [
+        Round(roundNumber: 1, playerScores: {'Alice': 10, 'Bob': 5}, lastPlayerIndex: 1),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WinnerScreen(
+            winner: players[0],
+            allPlayers: players,
+            roundHistory: roundHistory,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Button sollte vorhanden sein mit korrektem Text
+      expect(find.text('Rundenübersicht (1)'), findsOneWidget);
+      expect(find.byIcon(Icons.history), findsOneWidget);
+    });
+
+    testWidgets('Rundenübersicht Button fehlt bei leerer Historie', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WinnerScreen(
+            winner: players[0],
+            allPlayers: players,
+            roundHistory: const [],
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Button sollte nicht vorhanden sein
+      expect(find.text('Rundenübersicht'), findsNothing);
+      expect(find.byIcon(Icons.history), findsNothing);
+    });
+
+    testWidgets('Tippen auf Rundenübersicht öffnet Dialog mit Runden', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final roundHistory = [
+        Round(roundNumber: 1, playerScores: {'Alice': 10, 'Bob': 5}, lastPlayerIndex: 1),
+        Round(roundNumber: 2, playerScores: {'Alice': 15, 'Bob': 20}, lastPlayerIndex: 1),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WinnerScreen(
+            winner: players[0],
+            allPlayers: players,
+            roundHistory: roundHistory,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Auf Button tippen
+      await tester.tap(find.text('Rundenübersicht (2)'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Dialog sollte geöffnet sein
+      expect(find.text('Rundenübersicht'), findsOneWidget);
+      expect(find.text('Schließen'), findsOneWidget);
+
+      // Beide Runden sollten angezeigt werden
+      expect(find.text('Runde 1'), findsOneWidget);
+      expect(find.text('Runde 2'), findsOneWidget);
+    });
+
+    testWidgets('Dialog zeigt korrekte Scores pro Runde', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final roundHistory = [
+        Round(roundNumber: 1, playerScores: {'Alice': 10, 'Bob': 5}, lastPlayerIndex: 1),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WinnerScreen(
+            winner: players[0],
+            allPlayers: players,
+            roundHistory: roundHistory,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Dialog öffnen
+      await tester.tap(find.text('Rundenübersicht (1)'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Scores sollten angezeigt werden (Format: "playerName: +score")
+      expect(find.textContaining('Alice: +10'), findsOneWidget);
+      expect(find.textContaining('Bob: +5'), findsOneWidget);
+    });
+
+    testWidgets('Schließen-Button im Dialog schließt Dialog', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final roundHistory = [
+        Round(roundNumber: 1, playerScores: {'Alice': 10}, lastPlayerIndex: 0),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WinnerScreen(
+            winner: players[0],
+            allPlayers: players,
+            roundHistory: roundHistory,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Dialog öffnen
+      await tester.tap(find.text('Rundenübersicht (1)'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('Rundenübersicht'), findsOneWidget);
+
+      // Schließen
+      await tester.tap(find.text('Schließen'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Dialog geschlossen
+      expect(find.text('Rundenübersicht'), findsNothing);
+      // WinnerScreen noch sichtbar
+      expect(find.text('GEWINNER'), findsOneWidget);
     });
   });
 }

@@ -25,6 +25,8 @@
 - Leere Eingabe wird als 0 interpretiert
 - Farbliche Markierung (grün) zeigt Spieler mit bereits eingetragenem Score
 - Automatischer Runde-Wechsel sobald alle Spieler einen Score haben
+- **Number Pad**: Ziffernblock (0-9) mit Bestätigen- und Löschen-Button für komfortable Eingabe auf Touch-Geräten
+- Anzeige der letzten eingetragenen Punkte (+X) in der Spielerliste
 - **Undo (einzelner Spieler)**: Langer Druck auf einen bereits eingetragenen Spieler macht dessen letzten Score rückgängig; der alte Wert wird in das Eingabefeld gesetzt und markiert
 - **Undo (Runde)**: Langer Druck auf die gesamte Runde-Card (mit Undo-Icon) macht die letzte abgeschlossene Runde rückgängig
 - **Unterbrochene Runde wiederherstellen**: Beim Rückgängig-Machen einer Runde werden bereits in der aktuellen Runde eingegebene Scores gespeichert und beim nächsten Runde-Wechsel automatisch wiederhergestellt
@@ -48,9 +50,9 @@
 
 ### 2.6 Round History
 - Alle abgeschlossenen Runden werden gespeichert
-- Eingeklappte History-Ansicht im Spielbildschirm zeigt vergangene Runden
+- **Im Spielbildschirm**: Icon-Button mit Badge (Anzahl abgeschlossener Runden) im Header; Tippen öffnet ein BottomSheet mit der Rundenübersicht
 - Pro Runde werden die Scores aller Spieler angezeigt
-- Animation beim Öffnen/Schließen der History
+- **Im Gewinnerbildschirm**: "Rundenübersicht"-Button öffnet einen Dialog mit allen gespielten Runden und deren Scores
 
 ### 2.7 Statistics (Statistiken)
 - Statistiken-Funktion über Button im Startbildschirm zugänglich
